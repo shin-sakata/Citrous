@@ -32,7 +32,7 @@ helloAction name = textPlain ("Hello " <> name <> "!!")
 
 ### application/json
 
-localhost:8080/echoUser/20/Citrous ---> `{"age":2,"name":"Citrous"}`
+localhost:8080/echoUser/20/Citrous ---> `{"age":20,"name":"Citrous"}`
 
 ```haskell
 import Citrous.API
