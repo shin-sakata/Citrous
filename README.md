@@ -8,7 +8,7 @@
 
 ### text/plain
 
-localhost:8080          --> "Hello Citrous!!"
+localhost:8080          --> "Hello Citrous!!"  
 localhost:8080/yourName --> "Hello yourName!!"
 
 ```haskell
