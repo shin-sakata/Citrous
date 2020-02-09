@@ -8,8 +8,10 @@
 
 ### text/plain
 
-localhost:8080          --> "Hello Citrous!!"  
-localhost:8080/yourName --> "Hello yourName!!"
+|HTTP-Method|URL|Response|
+|---|---|---|
+|GET|localhost:8080|Hello Citrous!!|
+|GET|localhost:8080/yourName  |Hello YourName!!|
 
 ```haskell
 import Citrous.API
@@ -32,7 +34,10 @@ helloAction name = textPlain ("Hello " <> name <> "!!")
 
 ### application/json
 
-localhost:8080/echoUser/20/Citrous ---> `{"age":20,"name":"Citrous"}`
+|HTTP-Method|Entry point|Response|
+|---|---|---|
+|GET|localhost:8080/echoUser/33/Orange|`{"age":33,"name":"Orange"}`|
+|GET|localhost:8080/echoUser/24/Lemon|`{"age":24,"name":"Lemon"}`|
 
 ```haskell
 import Citrous.API
