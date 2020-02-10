@@ -6,11 +6,12 @@ module Citrous.API.Router
   , text
   , router
   , Routes
+  , absolute
   , (</>)
   ) where
 
 import Citrous.API.Action (Action)
-import Data.Attoparsec.ByteString (IResult(..), Parser, feed, many1, parse, string, takeWhile1)
+import Data.Attoparsec.ByteString (IResult(..), Parser, feed, many1, parseOnly, string, takeWhile1, endOfInput)
 import Data.Attoparsec.ByteString.Char8 (char, digit)
 import Data.List ((++))
 import Data.Typeable (TypeRep)
@@ -106,16 +107,22 @@ post :: Parser (HList a) -> Fn a Action -> Routes
 post = methodPathParser "POST"
 
 {-|
+  必ずRouteを返す関数
+-}
+absolute :: Action -> Routes
+absolute = lift . Left
+
+{-|
   http methodを引数にして、Routesを生成する
 -}
 methodPathParser :: ByteString -> Parser (HList a) -> Fn a Action -> Routes
 methodPathParser method pathParser action = do
-  let parser = match method >> apply action <$> pathParser
+  let parser = match method >> apply action <$> (pathParser <* endOfInput)
   route <- ask
   lift $
-    case parse parser route `feed` "" of
-      Done "" action -> Left action
-      _ -> Right ()
+    case parseOnly parser route of
+      Right action -> Left action
+      Left _ -> Right ()
 
 {-|
   パスからIntを取り出す

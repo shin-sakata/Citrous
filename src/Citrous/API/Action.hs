@@ -1,6 +1,6 @@
 module Citrous.API.Action
   ( Action
-  , HasRequest 
+  , HasRequest
   , responseLBS
   , maybeJson
   , textPlain
