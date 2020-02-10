@@ -11,17 +11,11 @@ module Citrous.API.Router
   ) where
 
 import Citrous.API.Action (Action)
-import Data.Attoparsec.ByteString (IResult(..), Parser, feed, many1, parseOnly, string, takeWhile1, endOfInput)
+import Data.Attoparsec.ByteString (Parser, many1, parseOnly, string, takeWhile1, endOfInput)
 import Data.Attoparsec.ByteString.Char8 (char, digit)
-import Data.List ((++))
-import Data.Typeable (TypeRep)
-import Network.HTTP.Types
-import Network.Wai (Request, Response, rawPathInfo, requestMethod)
+import Network.Wai (Request, rawPathInfo, requestMethod)
 import Prelude (read)
 import RIO
-import RIO.Text (Text, pack)
-import qualified RIO.Text as T
-import RIO.Writer (Writer, execWriter, tell)
 import Data.Utf8Convertible (convert)
 
 {-|
