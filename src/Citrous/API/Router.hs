@@ -4,7 +4,7 @@ module Citrous.API.Router
   , int
   , match
   , text
-  , router
+  , runRoutes
   , Routes
   , absolute
   , (</>)
@@ -23,7 +23,17 @@ import Data.Utf8Convertible (convert)
   doモナドで順番に書いていき、最初にマッチしたパスのActionをLeftとして早期にリターンすることにより、
   ルーティングを表している。
 -}
-type Routes = ReaderT ByteString (Either Action) ()
+type Routes a = ReaderT ByteString (Either a) ()
+
+{-|
+  getやpost等で生成したRoutesとRequestを元に正しいActionを返す
+-}
+runRoutes :: Routes a -> Request -> a
+runRoutes routes req = do
+  let route = requestMethod req <> rawPathInfo req
+  case runReaderT routes route of
+    Right _ -> undefined
+    Left action -> action
 
 {-|
   ルーターのパスから取得する値を型レベルで保持しておくヘテロリスト
@@ -82,34 +92,24 @@ apply v HNil = v
 apply f (a ::: as) = apply (f a) as
 
 {-|
-  getやpost等で生成したRoutesとRequestを元に正しいActionを返す
--}
-router :: Request -> Routes -> Action
-router req routes = do
-  let route = requestMethod req <> rawPathInfo req
-  case runReaderT routes route of
-    Right _ -> undefined
-    Left action -> action
-
-{-|
   Routesの生成
 -}
-get :: Parser (HList a) -> Fn a Action -> Routes
+get :: Parser (HList a) -> Fn a t  -> Routes t
 get = methodPathParser "GET"
 
-post :: Parser (HList a) -> Fn a Action -> Routes
+post :: Parser (HList a) -> Fn a t -> Routes t
 post = methodPathParser "POST"
 
 {-|
   必ずRouteを返す関数
 -}
-absolute :: Action -> Routes
+absolute :: a -> Routes a
 absolute = lift . Left
 
 {-|
   http methodを引数にして、Routesを生成する
 -}
-methodPathParser :: ByteString -> Parser (HList a) -> Fn a Action -> Routes
+methodPathParser :: ByteString -> Parser (HList a) -> Fn a t -> Routes t
 methodPathParser method pathParser action = do
   let parser = match method >> apply action <$> (pathParser <* endOfInput)
   route <- ask

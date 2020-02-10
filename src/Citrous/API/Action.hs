@@ -23,23 +23,27 @@ module Citrous.API.Action
   , requestHeaderReferer
   , requestHeaderUserAgent
   , getQuery
+  , runAction
   ) where
 
-import           Data.Aeson          (FromJSON, ToJSON, encode)
-import           Data.Vault.Lazy     (Vault)
-import           Network.HTTP.Types  (HttpVersion, Method, Query,
-                                      RequestHeaders, ok200)
-import           Network.Socket      (SockAddr)
-import           Network.Wai         (Request, RequestBodyLength, Response,
-                                      responseLBS)
-import qualified Network.Wai         as Wai
-import           RIO                 (ByteString, LByteString, RIO, ask, join,
-                                      liftIO, Text)
-import Data.Utf8Convertible (convert, ConvertTo)
+import           Data.Aeson           (FromJSON, ToJSON, encode)
+import           Data.Utf8Convertible (ConvertTo, convert)
+import           Data.Vault.Lazy      (Vault)
+import           Network.HTTP.Types   (HttpVersion, Method, Query,
+                                       RequestHeaders, ok200)
+import           Network.Socket       (SockAddr)
+import           Network.Wai          (Application, Request, RequestBodyLength,
+                                       Response, responseLBS)
+import qualified Network.Wai          as Wai
+import           RIO                  (ByteString, LByteString, RIO, Text, ask,
+                                       join, liftIO, runRIO)
 
 type HasRequest a = RIO Request a
 
 type Action = RIO Request Response
+
+runAction :: Request -> Action -> IO Response
+runAction = runRIO
 
 json :: (FromJSON a, ToJSON a) => a -> Action
 json jsonData = pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
