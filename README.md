@@ -18,7 +18,7 @@ import Citrous.API
 import Data.Text (Text)
 
 main :: IO ()
-main = listenAndServe 8080 routes
+main = runCitrous 8080 routes
 
 routes :: Routes
 routes = do
@@ -46,7 +46,7 @@ import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
 main :: IO ()
-main = listenAndServe 8080 routes
+main = runCitrous 8080 routes
 
 routes :: Routes Action
 routes = do
