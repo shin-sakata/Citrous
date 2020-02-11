@@ -5,6 +5,7 @@ module Citrous.Unit.Action
   , responseLBS
   , maybeJson
   , textPlain
+  , textHtml
   , json
   , RequestBodyLength(..)
   , requestMethod
@@ -60,6 +61,9 @@ maybeJson jsonData =
 
 textPlain :: Text -> Action
 textPlain txt = pure $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
+
+textHtml :: Text -> Action
+textHtml html = pure $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
 
 requestMethod :: HasRequest Method
 requestMethod = Wai.requestMethod <$> ask
