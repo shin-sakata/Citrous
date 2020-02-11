@@ -1,6 +1,7 @@
 module Citrous.Unit.Action
   ( Action
   , HasRequest
+  , toApplication
   , responseLBS
   , maybeJson
   , textPlain
@@ -26,21 +27,26 @@ module Citrous.Unit.Action
   , runAction
   ) where
 
-import           Data.Aeson           (FromJSON, ToJSON, encode)
-import           Data.Utf8Convertible (ConvertTo, convert)
-import           Data.Vault.Lazy      (Vault)
-import           Network.HTTP.Types   (HttpVersion, Method, Query,
-                                       RequestHeaders, ok200)
-import           Network.Socket       (SockAddr)
-import           Network.Wai          (Application, Request, RequestBodyLength,
-                                       Response, responseLBS)
-import qualified Network.Wai          as Wai
-import           RIO                  (ByteString, LByteString, RIO, Text, ask,
-                                       join, liftIO, runRIO)
+import           Citrous.Unit.Application (ToApplication(..))
+import           Data.Aeson               (FromJSON, ToJSON, encode)
+import           Data.Utf8Convertible     (ConvertTo, convert)
+import           Data.Vault.Lazy          (Vault)
+import           Network.HTTP.Types       (HttpVersion, Method, Query,
+                                           RequestHeaders, ok200)
+import           Network.Socket           (SockAddr)
+import           Network.Wai              (Application, Request,
+                                           RequestBodyLength, Response,
+                                           responseLBS)
+import qualified Network.Wai              as Wai
+import           RIO                      (ByteString, LByteString, RIO, Text,
+                                           ask, join, liftIO, runRIO)
 
 type HasRequest a = RIO Request a
 
 type Action = RIO Request Response
+
+instance ToApplication Action where
+  toApplication action req respond = runAction req action >>= respond
 
 runAction :: Request -> Action -> IO Response
 runAction = runRIO
