@@ -1,14 +1,22 @@
 module Citrous.Integration.Core
-  ( listenAndServe
+  ( runCitrous
   ) where
 
-import           Citrous.Unit.Application (ToApplication(..))
+import           Citrous.Unit.Application (ToApplication (..))
 import           Citrous.Unit.Router      (Routes, runRoutes)
+import           Network.Socket           (Socket)
 import           Network.Wai              (Application)
-import           Network.Wai.Handler.Warp (Port, run)
+import           Network.Wai.Handler.Warp (Port, Settings, run, runEnv,
+                                           runSettings, runSettingsSocket)
 
-app :: ToApplication a => Routes a -> Application
-app routes request = toApplication (runRoutes routes request) request
+runCitrous :: ToApplication a => Port -> a -> IO ()
+runCitrous port = run port . toApplication
 
-listenAndServe :: ToApplication a => Port -> Routes a -> IO ()
-listenAndServe port routes = run port $ app routes
+runCitrousEnv :: ToApplication a => Port -> a -> IO ()
+runCitrousEnv port = runEnv port . toApplication 
+
+runCitrousSettings :: ToApplication a => Settings -> a -> IO ()
+runCitrousSettings settings = runSettings settings . toApplication
+
+runCitrousSocket :: ToApplication a => Settings -> Socket -> a -> IO ()
+runCitrousSocket settings socket = runSettingsSocket settings socket . toApplication

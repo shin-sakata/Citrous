@@ -15,6 +15,7 @@ import Data.Attoparsec.ByteString.Char8 (char, digit)
 import Data.Utf8Convertible (convert)
 import Network.Wai (Request, rawPathInfo, requestMethod)
 import RIO
+import Citrous.Unit.Application (ToApplication(..))
 
 {-|
   ルートを記述するための型
@@ -23,8 +24,11 @@ import RIO
 -}
 type Routes a = ReaderT ByteString (Either a) ()
 
+instance (ToApplication a) => ToApplication (Routes a) where
+  toApplication routes req = toApplication (runRoutes routes req) req
+
 {-|
-  getやpost等で生成したRoutesとRequestを元に正しいActionを返す
+  getやpost等で生成したRoutesとRequestを元に関数を返す
 -}
 runRoutes :: Routes a -> Request -> a
 runRoutes routes req = do
