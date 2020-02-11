@@ -48,7 +48,7 @@ import Data.Aeson (FromJSON, ToJSON)
 main :: IO ()
 main = listenAndServe 8080 routes
 
-routes :: Routes
+routes :: Routes Action
 routes = do
   get (match "/echoUser" </> int </> text) echoUserAction
 
