@@ -1,9 +1,9 @@
-module Citrous.API.Integration
+module Citrous.Integration.Core
   ( listenAndServe
   ) where
 
-import           Citrous.API.Action       (Action, runAction)
-import           Citrous.API.Router       (Routes, runRoutes)
+import           Citrous.Unit.Action       (Action, runAction)
+import           Citrous.Unit.Router       (Routes, runRoutes)
 import           Network.Wai              (Application)
 import           Network.Wai.Handler.Warp (Port, run)
 

@@ -8,7 +8,7 @@ import Data.Aeson (FromJSON, ToJSON)
 main :: IO ()
 main = listenAndServe 8080 routes
 
-routes :: Routes
+routes :: Routes Action
 routes = do
   get (match "/") topAction
   get (match "/hello" </> text) helloAction

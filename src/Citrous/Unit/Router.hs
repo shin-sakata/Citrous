@@ -1,4 +1,4 @@
-module Citrous.API.Router
+module Citrous.Unit.Router
   ( get
   , post
   , int
@@ -10,13 +10,11 @@ module Citrous.API.Router
   , (</>)
   ) where
 
-import Citrous.API.Action (Action)
-import Data.Attoparsec.ByteString (Parser, many1, parseOnly, string, takeWhile1, endOfInput)
+import Data.Attoparsec.ByteString (Parser, endOfInput, many1, parseOnly, string, takeWhile1)
 import Data.Attoparsec.ByteString.Char8 (char, digit)
-import Network.Wai (Request, rawPathInfo, requestMethod)
-import Prelude (read)
-import RIO
 import Data.Utf8Convertible (convert)
+import Network.Wai (Request, rawPathInfo, requestMethod)
+import RIO
 
 {-|
   ルートを記述するための型
@@ -34,6 +32,57 @@ runRoutes routes req = do
   case runReaderT routes route of
     Right _ -> undefined
     Left action -> action
+
+{-|
+  Routesの生成
+-}
+get :: Parser (HList a) -> Fn a t -> Routes t
+get = methodPathParser "GET"
+
+post :: Parser (HList a) -> Fn a t -> Routes t
+post = methodPathParser "POST"
+
+{-|
+  必ずRouteを返す関数
+-}
+absolute :: a -> Routes a
+absolute = lift . Left
+
+{-|
+  http methodを引数にして、Routesを生成する
+-}
+methodPathParser :: ByteString -> Parser (HList a) -> Fn a t -> Routes t
+methodPathParser method pathParser action = do
+  let parser = match method >> apply action <$> (pathParser <* endOfInput)
+  route <- ask
+  lift $
+    case parseOnly parser route of
+      Right action -> Left action
+      Left _ -> Right ()
+
+{-|
+  パスからIntを取り出す
+-}
+int :: Parser (HList '[ Int])
+int = do
+  i <- read <$> many1 digit
+  return $ i ::: HNil
+
+{-|
+  パスからTextを取り出す
+-}
+text :: Parser (HList '[ Text])
+text = do
+  str <- convert <$> takeWhile1 (/= 47)
+  return $ str ::: HNil
+
+{-|
+  文字列にマッチさせて値は返さない
+-}
+match :: ByteString -> Parser (HList '[])
+match txt = do
+  string txt
+  return HNil
 
 {-|
   ルーターのパスから取得する値を型レベルで保持しておくヘテロリスト
@@ -90,54 +139,3 @@ infixr 5 </>
 apply :: Fn xs r -> HList xs -> r
 apply v HNil = v
 apply f (a ::: as) = apply (f a) as
-
-{-|
-  Routesの生成
--}
-get :: Parser (HList a) -> Fn a t  -> Routes t
-get = methodPathParser "GET"
-
-post :: Parser (HList a) -> Fn a t -> Routes t
-post = methodPathParser "POST"
-
-{-|
-  必ずRouteを返す関数
--}
-absolute :: a -> Routes a
-absolute = lift . Left
-
-{-|
-  http methodを引数にして、Routesを生成する
--}
-methodPathParser :: ByteString -> Parser (HList a) -> Fn a t -> Routes t
-methodPathParser method pathParser action = do
-  let parser = match method >> apply action <$> (pathParser <* endOfInput)
-  route <- ask
-  lift $
-    case parseOnly parser route of
-      Right action -> Left action
-      Left _ -> Right ()
-
-{-|
-  パスからIntを取り出す
--}
-int :: Parser (HList '[ Int])
-int = do
-  i <- read <$> many1 digit
-  return $ i ::: HNil
-
-{-|
-  パスからTextを取り出す
--}
-text :: Parser (HList '[ Text])
-text = do
-  str <- convert <$> takeWhile1 (/= 47)
-  return $ str ::: HNil
-
-{-|
-  文字列にマッチさせて値は返さない
--}
-match :: ByteString -> Parser (HList '[])
-match txt = do
-  string txt
-  return HNil

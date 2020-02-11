@@ -1,4 +1,4 @@
-module Citrous.API.Action
+module Citrous.Unit.Action
   ( Action
   , HasRequest
   , responseLBS
