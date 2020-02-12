@@ -1,6 +1,6 @@
 # Citrous
 
-### Easy, Fast and Type-Safe Web Application Framework
+### A Simple, Fast and Type-Safe Web Application Framework
 
 (in development)
 
