@@ -1,5 +1,5 @@
-module Citrous.Unit.Action
-  ( Action
+module Citrous.Unit.Handler
+  ( Handler
   , HasRequest
   , toApplication
   , responseLBS
@@ -46,29 +46,31 @@ import           Network.Wai              (Application, Request,
                                            responseLBS)
 import qualified Network.Wai              as Wai
 
-type HasRequest a = Reader Request a
+type HasRequestT m a = ReaderT Request m a
 
-type Action = ActionT Identity
+type HasRequest a = HasRequestT Identity a
 
-type ActionT m = ReaderT Request m Response
+type HandlerT m = HasRequestT m Response
 
-instance ToApplication Action where
+type Handler = HandlerT Identity
+
+instance ToApplication Handler where
   toApplication action req respond = respond $ runAction action req
 
-runActionT :: (Monad m) => ActionT m -> Request -> m Response
+runActionT :: HandlerT m -> Request -> m Response
 runActionT = runReaderT
 
-runAction :: Action -> Request -> Response
-runAction act req = runIdentity $ runActionT act req 
+runAction :: Handler -> Request -> Response
+runAction act req = runIdentity $ runActionT act req
 
-json :: (FromJSON a, ToJSON a) => a -> Action
+json :: (FromJSON a, ToJSON a) => a -> Handler
 json jsonData = pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
 
-maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Action
+maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Handler
 maybeJson jsonData =
   pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
 
-textPlain :: Text -> Action
+textPlain :: Text -> Handler
 textPlain txt = pure $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
 requestMethod :: HasRequest Method
