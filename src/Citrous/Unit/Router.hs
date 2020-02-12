@@ -10,20 +10,24 @@ module Citrous.Unit.Router
   , (</>)
   ) where
 
-import Data.Attoparsec.ByteString (Parser, endOfInput, many1, parseOnly, string, takeWhile1)
-import Data.Attoparsec.ByteString.Char8 (char, digit)
-import Data.Utf8Convertible (convert)
-import Network.Wai (Request, rawPathInfo, requestMethod)
-import RIO
-import Citrous.Unit.Application (ToApplication(..))
+import           Citrous.Unit.Application (ToApplication(..))
+import           Control.Monad.Reader (ReaderT, runReaderT, ask)
+import           Control.Monad.Trans (lift)
+import           Data.Attoparsec.ByteString (Parser, endOfInput, many1, parseOnly, string, takeWhile1)
+import           Data.Attoparsec.ByteString.Char8 (char, digit)
 import qualified Data.ByteString as BS
+import           Data.ByteString (ByteString)
+import qualified Data.Text as T
+import           Data.Text (Text)
+import           Data.Utf8Convertible (convert)
+import           Network.Wai (Request, rawPathInfo, requestMethod)
 
 {-|
   ルートを記述するための型
   doモナドで順番に書いていき、最初にマッチしたパスのActionをLeftとして早期にリターンすることにより、
   ルーティングを表している。
 -}
-type Routes a = ReaderT ByteString (Either a) ()
+type Routes a = ReaderT BS.ByteString (Either a) ()
 
 instance (ToApplication a) => ToApplication (Routes a) where
   toApplication routes req = toApplication (runRoutes routes req) req
