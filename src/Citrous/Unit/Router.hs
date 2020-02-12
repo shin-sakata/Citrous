@@ -16,6 +16,7 @@ import Data.Utf8Convertible (convert)
 import Network.Wai (Request, rawPathInfo, requestMethod)
 import RIO
 import Citrous.Unit.Application (ToApplication(..))
+import qualified Data.ByteString as BS
 
 {-|
   ルートを記述するための型
@@ -77,7 +78,7 @@ int = do
 -}
 text :: Parser (HList '[ Text])
 text = do
-  str <- convert <$> takeWhile1 (/= 47)
+  str <- convert <$> takeWhile1 (/= BS.head "/")
   return $ str ::: HNil
 
 {-|
