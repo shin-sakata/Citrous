@@ -21,7 +21,6 @@ description:         Please see the README on GitHub at <https://github.com/Gith
 
 dependencies:
   - base >= 4.7 && < 5
-  - rio
   - wai
   - warp
   - http-types
@@ -30,7 +29,7 @@ dependencies:
   - vault
   - text
   - attoparsec
-  - transformers
+  - mtl
   - bytestring
   - utf8-string
 

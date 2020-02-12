@@ -1,5 +1,5 @@
-module Citrous.Unit.Action
-  ( Action
+module Citrous.Unit.Handler
+  ( Handler
   , HasRequest
   , toApplication
   , responseLBS
@@ -28,8 +28,15 @@ module Citrous.Unit.Action
   , runAction
   ) where
 
-import           Citrous.Unit.Application (ToApplication(..))
+import           Citrous.Unit.Application (ToApplication (..))
+import           Control.Monad            (join)
+import           Control.Monad.Identity   (Identity, runIdentity)
+import           Control.Monad.Reader     (Reader, ReaderT, ask, asks,
+                                           runReader, runReaderT)
+import           Control.Monad.Trans      (liftIO)
 import           Data.Aeson               (FromJSON, ToJSON, encode)
+import           Data.ByteString          (ByteString)
+import           Data.Text                (Text)
 import           Data.Utf8Convertible     (ConvertTo, convert)
 import           Data.Vault.Lazy          (Vault)
 import           Network.HTTP.Types       (HttpVersion, Method, Query,
@@ -39,81 +46,84 @@ import           Network.Wai              (Application, Request,
                                            RequestBodyLength, Response,
                                            responseLBS)
 import qualified Network.Wai              as Wai
-import           RIO                      (ByteString, LByteString, RIO, Text,
-                                           ask, join, liftIO, runRIO)
 
-type HasRequest a = RIO Request a
+type HasRequestT m a = ReaderT Request m a
 
-type Action = RIO Request Response
+type HasRequest a = HasRequestT Identity a
 
-instance ToApplication Action where
-  toApplication action req respond = runAction req action >>= respond
+type HandlerT m = HasRequestT m Response
 
-runAction :: Request -> Action -> IO Response
-runAction = runRIO
+type Handler = HandlerT Identity
 
-json :: (FromJSON a, ToJSON a) => a -> Action
+instance ToApplication Handler where
+  toApplication action req respond = respond $ runAction action req
+
+runActionT :: HandlerT m -> Request -> m Response
+runActionT = runReaderT
+
+runAction :: Handler -> Request -> Response
+runAction act req = runIdentity $ runActionT act req
+
+json :: (FromJSON a, ToJSON a) => a -> Handler
 json jsonData = pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
 
-maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Action
+maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Handler
 maybeJson jsonData =
   pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
 
-textPlain :: Text -> Action
+textPlain :: Text -> Handler
 textPlain txt = pure $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
 textHtml :: Text -> Action
 textHtml html = pure $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
 
 requestMethod :: HasRequest Method
-requestMethod = Wai.requestMethod <$> ask
+requestMethod = asks Wai.requestMethod
 
 httpVersion :: HasRequest HttpVersion
-httpVersion = Wai.httpVersion <$> ask
+httpVersion = asks Wai.httpVersion
 
 rawPathInfo :: HasRequest ByteString
-rawPathInfo = Wai.rawPathInfo <$> ask
+rawPathInfo = asks Wai.rawPathInfo
 
 rawQueryString :: HasRequest ByteString
-rawQueryString = Wai.rawQueryString <$> ask
+rawQueryString = asks Wai.rawQueryString
 
 requestHeaders :: HasRequest RequestHeaders
-requestHeaders = Wai.requestHeaders <$> ask
+requestHeaders = asks Wai.requestHeaders
 
 isSecure :: HasRequest Bool
-isSecure = Wai.isSecure <$> ask
+isSecure = asks Wai.isSecure
 
 remoteHost :: HasRequest SockAddr
-remoteHost = Wai.remoteHost <$> ask
+remoteHost = asks Wai.remoteHost
 
 pathInfo :: HasRequest [Text]
-pathInfo = Wai.pathInfo <$> ask
+pathInfo = asks Wai.pathInfo
 
 queryString :: HasRequest Query
-queryString = Wai.queryString <$> ask
+queryString = asks Wai.queryString
 
-requestBodyChunk :: HasRequest ByteString
-requestBodyChunk = do
-  req <- ask
-  liftIO (Wai.getRequestBodyChunk req)
+requestBodyChunk :: HasRequest (IO ByteString)
+requestBodyChunk = asks Wai.getRequestBodyChunk
 
 vault :: HasRequest Vault
-vault = Wai.vault <$> ask
+vault = asks Wai.vault
 
 requestBodyLength :: HasRequest RequestBodyLength
-requestBodyLength = Wai.requestBodyLength <$> ask
+requestBodyLength = asks Wai.requestBodyLength
 
 requestHeaderHost :: HasRequest (Maybe ByteString)
-requestHeaderHost = Wai.requestHeaderHost <$> ask
+requestHeaderHost = asks Wai.requestHeaderHost
 
 requestHeaderRange :: HasRequest (Maybe ByteString)
-requestHeaderRange = Wai.requestHeaderRange <$> ask
+requestHeaderRange = asks Wai.requestHeaderRange
 
 requestHeaderReferer :: HasRequest (Maybe ByteString)
-requestHeaderReferer = Wai.requestHeaderReferer <$> ask
+requestHeaderReferer = asks Wai.requestHeaderReferer
 
 requestHeaderUserAgent :: HasRequest (Maybe ByteString)
-requestHeaderUserAgent = Wai.requestHeaderUserAgent <$> ask
+requestHeaderUserAgent = asks Wai.requestHeaderUserAgent
 
 getQuery :: ByteString -> HasRequest (Maybe ByteString)
 getQuery key = join <$> (lookup key <$> queryString)
