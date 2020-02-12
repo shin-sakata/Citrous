@@ -20,15 +20,15 @@ import Data.Text (Text)
 main :: IO ()
 main = runCitrous 8080 routes
 
-routes :: Routes
+routes :: Routes Handler
 routes = do
   get (match "/") topAction
   get (match "/hello" </> text) helloAction
 
-topAction :: Action
+topAction :: Handler
 topAction = textPlain "Hello Citrous!!"
 
-helloAction :: Text -> Action
+helloAction :: Text -> Handler
 helloAction name = textPlain ("Hello " <> name <> "!!")
 ```
 
@@ -48,11 +48,11 @@ import Data.Aeson (FromJSON, ToJSON)
 main :: IO ()
 main = runCitrous 8080 routes
 
-routes :: Routes Action
+routes :: Routes Handler
 routes = do
   get (match "/echoUser" </> int </> text) echoUserAction
 
-echoUserAction :: Int -> Text -> Action
+echoUserAction :: Int -> Text -> Handler
 echoUserAction age name = json $ User age name
 
 data User =
