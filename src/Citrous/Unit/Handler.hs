@@ -25,7 +25,8 @@ module Citrous.Unit.Handler
   , requestHeaderReferer
   , requestHeaderUserAgent
   , getQuery
-  , runAction
+  , runHandler
+  , runHandlerT
   ) where
 
 import           Citrous.Unit.Application (ToApplication (..))
@@ -56,13 +57,13 @@ type HandlerT m = HasRequestT m Response
 type Handler = HandlerT Identity
 
 instance ToApplication Handler where
-  toApplication action req respond = respond $ runAction action req
+  toApplication action req respond = respond $ runHandler action req
 
-runActionT :: HandlerT m -> Request -> m Response
-runActionT = runReaderT
+runHandlerT :: HandlerT m -> Request -> m Response
+runHandlerT = runReaderT
 
-runAction :: Handler -> Request -> Response
-runAction act req = runIdentity $ runActionT act req
+runHandler :: Handler -> Request -> Response
+runHandler act req = runIdentity $ runHandlerT act req
 
 json :: (FromJSON a, ToJSON a) => a -> Handler
 json jsonData = pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
@@ -74,7 +75,7 @@ maybeJson jsonData =
 textPlain :: Text -> Handler
 textPlain txt = pure $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
-textHtml :: Text -> Action
+textHtml :: Text -> Handler
 textHtml html = pure $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
 
 requestMethod :: HasRequest Method

@@ -63,12 +63,12 @@
     <orderEntry type="library" name="integer-logarithms-1.0.3" level="project" />
     <orderEntry type="library" name="ghc-boot-th-8.6.5" level="project" />
     <orderEntry type="library" name="pretty-1.1.3.6" level="project" />
-    <orderEntry type="library" name="base-orphans-0.8.2" level="project" />
     <orderEntry type="library" name="random-1.1" level="project" />
     <orderEntry type="library" name="network-byte-order-0.1.3.0" level="project" />
     <orderEntry type="library" name="psqueues-0.2.7.2" level="project" />
     <orderEntry type="library" name="appar-0.1.8" level="project" />
     <orderEntry type="library" name="byteorder-1.0.4" level="project" />
     <orderEntry type="library" name="zlib-0.6.2.1" level="project" />
+    <orderEntry type="library" name="base-orphans-0.8.1" level="project" />
   </component>
 </module>
