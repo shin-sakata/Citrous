@@ -1,5 +1,9 @@
 module Citrous.Integration.Core
   ( runCitrous
+  , runCitrousEnv
+  , runCitrousSettings
+  , runCitrousSocket
+  , Port
   ) where
 
 import           Citrous.Unit.Application (ToApplication (..))

@@ -6,7 +6,12 @@ import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
 main :: IO ()
-main = runCitrous 8080 routes
+main = do
+  putStrLn $ "Listen and serve on " ++ show port
+  runCitrous port routes
+  where
+    port :: Port
+    port = 8080
 
 routes :: Routes Handler
 routes = do
