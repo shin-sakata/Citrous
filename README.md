@@ -24,12 +24,16 @@ routes :: Routes Handler
 routes = do
   get (match "/") topAction
   get (match "/hello" </> text) helloAction
+  absolute notFound
 
 topAction :: Handler
 topAction = textPlain "Hello Citrous!!"
 
 helloAction :: Text -> Handler
 helloAction name = textPlain ("Hello " <> name <> "!!")
+
+notFound :: Handler
+notFound = throwErr err404
 ```
 
 ### application/json

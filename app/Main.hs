@@ -18,6 +18,7 @@ routes = do
   get (match "/") topAction
   get (match "/hello" </> text) helloAction
   get (match "/echoUser" </> text </> int) echoUserAction
+  absolute notFount
 
 topAction :: Handler
 topAction = textPlain "Hello Citrous!!"
@@ -28,6 +29,10 @@ helloAction name = textPlain ("Hello " <> name <> "!!")
 echoUserAction :: Text -> Int -> Handler
 echoUserAction name age = json $ User name age
 
+notFount :: Handler
+notFount =
+  throwErr err404
+  
 data User =
   User
     { name :: Text

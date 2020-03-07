@@ -27,6 +27,8 @@ module Citrous.Unit.Handler
   , getQuery
   , runHandler
   , runHandlerT
+  , throwErr
+  , returnResponse
   ) where
 
 import           Citrous.Unit.Application (ToApplication (..))
@@ -47,36 +49,45 @@ import           Network.Wai              (Application, Request,
                                            RequestBodyLength, Response,
                                            responseLBS)
 import qualified Network.Wai              as Wai
+import Citrous.Unit.ServerErr (ServerErr, responseServerError)
 
 type HasRequestT m a = ReaderT Request m a
 
 type HasRequest a = HasRequestT Identity a
 
-type HandlerT m = HasRequestT m Response
+type HandlerT m = HasRequestT m (Either ServerErr Response)
 
-type Handler = HandlerT Identity
+type Handler = HandlerT Identity 
 
 instance ToApplication Handler where
   toApplication action req respond = respond $ runHandler action req
 
-runHandlerT :: HandlerT m -> Request -> m Response
+returnResponse :: Response -> Handler
+returnResponse = return . Right
+
+throwErr :: ServerErr -> Handler
+throwErr = return . Left
+
+runHandlerT :: HandlerT m -> Request -> m (Either ServerErr Response)
 runHandlerT = runReaderT
 
 runHandler :: Handler -> Request -> Response
-runHandler act req = runIdentity $ runHandlerT act req
+runHandler act req = case runIdentity $ runHandlerT act req of
+  Right response -> response
+  Left serverErr -> responseServerError serverErr
 
 json :: (FromJSON a, ToJSON a) => a -> Handler
-json jsonData = pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
+json jsonData = returnResponse $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
 
 maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Handler
 maybeJson jsonData =
-  pure $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
+  returnResponse $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
 
 textPlain :: Text -> Handler
-textPlain txt = pure $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
+textPlain txt = returnResponse $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
 textHtml :: Text -> Handler
-textHtml html = pure $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
+textHtml html = returnResponse $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
 
 requestMethod :: HasRequest Method
 requestMethod = asks Wai.requestMethod
