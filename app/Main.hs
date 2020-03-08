@@ -4,6 +4,7 @@ import Citrous.API
 import Data.Text (Text)
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
+import Control.Monad.Error.Class (throwError)
 
 main :: IO ()
 main = do
@@ -24,14 +25,14 @@ topAction :: Handler
 topAction = textPlain "Hello Citrous!!"
 
 helloAction :: Text -> Handler
-helloAction name = textPlain ("Hello " <> name <> "!!")
+helloAction name = textPlain $ "Hello " <> name <> "!!"
 
 echoUserAction :: Text -> Int -> Handler
 echoUserAction name age = json $ User name age
 
 notFount :: Handler
 notFount =
-  throwErr err404
+  throwError err404
   
 data User =
   User
