@@ -57,12 +57,12 @@ type HasRequestT m a = Monad m => ReaderT Request m a
 instance ToApplication Handler where
   toApplication hdr req respond = do
      hdr' <- runHandler hdr req
-     let ioApplication = unEither hdr'
-     ioApplication req respond
+     let response = unEither hdr'
+     respond response
     where
-      unEither :: Either ServerErr Response -> Application
-      unEither (Right a)  = \ req respond -> respond a
-      unEither (Left err) = \ req respond -> respond $ responseServerError err
+      unEither :: Either ServerErr Response -> Response
+      unEither (Right a)  = a
+      unEither (Left err) = responseServerError err
 
 runHandler :: Handler -> Request -> IO (Either ServerErr Response)
 runHandler hdr req = runExceptT (runReaderT hdr req)
