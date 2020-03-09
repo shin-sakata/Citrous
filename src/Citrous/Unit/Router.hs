@@ -20,23 +20,28 @@ import           Data.ByteString (ByteString)
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Data.Utf8Convertible (convert)
-import           Network.Wai (Request, rawPathInfo, requestMethod)
+import           Network.Wai (Request, rawPathInfo, requestMethod, Application)
+import           Citrous.Unit.ServerErr (responseServerError, err404)
+import Data.Maybe (fromMaybe)
 
 {-| Represent routing by returning the first matching Handler by the Either monad
 -}
 type Routes a = ReaderT BS.ByteString (Either a) ()
 
 instance (ToApplication a) => ToApplication (Routes a) where
-  toApplication routes req = toApplication (runRoutes routes req) req
+  toApplication routes req = maybe defaultNotFound toApplication (runRoutes routes req) req
+
+defaultNotFound :: Application
+defaultNotFound req respond = respond $ responseServerError err404
 
 {-| Resolve Routes
 -}
-runRoutes :: Routes a -> Request -> a
+runRoutes :: Routes a -> Request -> Maybe a
 runRoutes routes req = do
   let route = requestMethod req <> rawPathInfo req
   case runReaderT routes route of
-    Right _ -> undefined
-    Left action -> action
+    Right _ -> Nothing
+    Left action -> Just action
 
 {-| Generate GET Routes
 -}
