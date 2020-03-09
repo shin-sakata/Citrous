@@ -1,6 +1,13 @@
 module Citrous.Unit.Router
   ( get
   , post
+  , Citrous.Unit.Router.head
+  , put
+  , delete
+  , trace
+  , connect
+  , options
+  , patch
   , int
   , match
   , text
@@ -22,7 +29,19 @@ import           Data.Text (Text)
 import           Data.Utf8Convertible (convert)
 import           Network.Wai (Request, rawPathInfo, requestMethod, Application)
 import           Citrous.Unit.ServerErr (responseServerError, err404)
-import Data.Maybe (fromMaybe)
+import           Data.Maybe (fromMaybe)
+import           Network.HTTP.Types
+                    ( Method
+                    , methodGet
+                    , methodPost
+                    , methodHead
+                    , methodPut
+                    , methodDelete
+                    , methodTrace
+                    , methodConnect
+                    , methodOptions
+                    , methodPatch
+                    )
 
 {-| Represent routing by returning the first matching Handler by the Either monad
 -}
@@ -43,15 +62,18 @@ runRoutes routes req = do
     Right _ -> Nothing
     Left action -> Just action
 
-{-| Generate GET Routes
+{-| Generate Routes
 -}
-get :: Parser (HList a) -> Fn a t -> Routes t
-get = methodPathParser "GET"
-
-{-| Generate POST Routes
--}
-post :: Parser (HList a) -> Fn a t -> Routes t
-post = methodPathParser "POST"
+get, post, head, put, delete, trace, connect, options, patch  :: Parser (HList a) -> Fn a t -> Routes t
+get = methodPathParser methodGet
+post = methodPathParser methodPost
+head = methodPathParser methodHead
+put = methodPathParser methodPut
+delete = methodPathParser methodDelete
+trace = methodPathParser methodTrace
+connect = methodPathParser methodConnect
+options = methodPathParser methodOptions
+patch = methodPathParser methodPatch
 
 {-| Always generate Routes
 -}
@@ -60,7 +82,7 @@ absolute = lift . Left
 
 {-| Generate Routes
 -}
-methodPathParser :: ByteString -> Parser (HList a) -> Fn a t -> Routes t
+methodPathParser :: Method -> Parser (HList a) -> Fn a t -> Routes t
 methodPathParser method pathParser action = do
   let parser = match method >> apply action <$> (pathParser <* endOfInput)
   route <- ask
