@@ -22,18 +22,14 @@ import           Data.Text (Text)
 import           Data.Utf8Convertible (convert)
 import           Network.Wai (Request, rawPathInfo, requestMethod)
 
-{-|
-  ルートを記述するための型
-  doモナドで順番に書いていき、最初にマッチしたパスのActionをLeftとして早期にリターンすることにより、
-  ルーティングを表している。
+{-| Represent routing by returning the first matching Handler by the Either monad
 -}
 type Routes a = ReaderT BS.ByteString (Either a) ()
 
 instance (ToApplication a) => ToApplication (Routes a) where
   toApplication routes req = toApplication (runRoutes routes req) req
 
-{-|
-  getやpost等で生成したRoutesとRequestを元に関数を返す
+{-| Resolve Routes
 -}
 runRoutes :: Routes a -> Request -> a
 runRoutes routes req = do
@@ -42,23 +38,22 @@ runRoutes routes req = do
     Right _ -> undefined
     Left action -> action
 
-{-|
-  Routesの生成
+{-| Generate GET Routes
 -}
 get :: Parser (HList a) -> Fn a t -> Routes t
 get = methodPathParser "GET"
 
+{-| Generate POST Routes
+-}
 post :: Parser (HList a) -> Fn a t -> Routes t
 post = methodPathParser "POST"
 
-{-|
-  必ずRouteを返す関数
+{-| Always generate Routes
 -}
 absolute :: a -> Routes a
 absolute = lift . Left
 
-{-|
-  http methodを引数にして、Routesを生成する
+{-| Generate Routes
 -}
 methodPathParser :: ByteString -> Parser (HList a) -> Fn a t -> Routes t
 methodPathParser method pathParser action = do
@@ -69,32 +64,28 @@ methodPathParser method pathParser action = do
       Right action -> Left action
       Left _ -> Right ()
 
-{-|
-  パスからIntを取り出す
+{-| Pick Int from path
 -}
 int :: Parser (HList '[ Int])
 int = do
   i <- read <$> many1 digit
   return $ i ::: HNil
 
-{-|
-  パスからTextを取り出す
+{-| Pick Text from path
 -}
 text :: Parser (HList '[ Text])
 text = do
   str <- convert <$> takeWhile1 (/= BS.head "/")
   return $ str ::: HNil
 
-{-|
-  文字列にマッチさせて値は返さない
+{-| Matches a Bytestring but does not return a value
 -}
 match :: ByteString -> Parser (HList '[])
 match txt = do
   string txt
   return HNil
 
-{-|
-  ルーターのパスから取得する値を型レベルで保持しておくヘテロリスト
+{-| Type Level List (Heterogeneous List)
 -}
 data HList :: [*] -> * where
   HNil :: HList '[]
@@ -102,11 +93,10 @@ data HList :: [*] -> * where
 
 infixr 5 :::
 
-{-|
-  ヘテロリストを関数に適用するための型レベル関数
+{-| Function Type for applying HList to function
 
-  HList '[Int, Text, String] -> (Int -> Text -> String -> Foo) -> Foo
-  これを動かすことができる
+    Example :
+    Fn '[Int, Text] Bool == Int -> Text -> Bool
 -}
 type family Fn (as :: [*]) r
 
@@ -114,8 +104,7 @@ type instance Fn '[] r = r
 
 type instance Fn (x ': xs) r = x -> Fn xs r
 
-{-|
-  ヘテロリストの連結後の型を生成する型レベル関数
+{-| TypeFamily to represent the type after appending of HList
 -}
 type family (ls :: [k]) ++ (rs :: [k]) :: [k]
 
@@ -123,15 +112,13 @@ type instance '[] ++ ys = ys
 
 type instance (x ': xs) ++ ys = x ': (xs ++ ys)
 
-{-|
-  ヘテロリストの連結
+{-| Append HList
 -}
 hAppend :: HList xs -> HList ys -> HList (xs ++ ys)
 hAppend HNil ys = ys
 hAppend (x1 ::: HNil) ys = x1 ::: ys
 
-{-|
-  ヘテロリストレベルのパーサーの結合
+{-| Append HList Parser
 -}
 (</>) :: Parser (HList xs) -> Parser (HList ys) -> Parser (HList (xs ++ ys))
 (</>) pl pr = do
@@ -142,8 +129,7 @@ hAppend (x1 ::: HNil) ys = x1 ::: ys
 
 infixr 5 </>
 
-{-|
-  ヘテロリストの関数適用する
+{-| Apply HList to function
 -}
 apply :: Fn xs r -> HList xs -> r
 apply v HNil = v

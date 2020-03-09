@@ -1,6 +1,5 @@
 module Citrous.Unit.Handler
   ( Handler
-  , HasRequest
   , toApplication
   , responseLBS
   , maybeJson
@@ -26,17 +25,12 @@ module Citrous.Unit.Handler
   , requestHeaderUserAgent
   , getQuery
   , runHandler
-  , runHandlerT
-  , throwErr
-  , returnResponse
   ) where
 
 import           Citrous.Unit.Application (ToApplication (..))
 import           Control.Monad            (join)
 import           Control.Monad.Identity   (Identity, runIdentity)
-import           Control.Monad.Reader     (Reader, ReaderT, ask, asks,
-                                           runReader, runReaderT)
-import           Control.Monad.Trans      (liftIO)
+import           Control.Monad.Trans      (liftIO, lift)
 import           Data.Aeson               (FromJSON, ToJSON, encode)
 import           Data.ByteString          (ByteString)
 import           Data.Text                (Text)
@@ -49,93 +43,90 @@ import           Network.Wai              (Application, Request,
                                            RequestBodyLength, Response,
                                            responseLBS)
 import qualified Network.Wai              as Wai
-import Citrous.Unit.ServerErr (ServerErr, responseServerError)
+import           Control.Monad.Reader     (Reader, ReaderT, ask, asks,
+                                           runReader, runReaderT)
+import           Control.Monad.Trans.Except
+                 (ExceptT, runExceptT)
+import           Citrous.Unit.ServerErr
+                 (ServerErr, responseServerError)
 
-type HasRequestT m a = ReaderT Request m a
+type Handler = ReaderT Request (ExceptT ServerErr IO) Response
 
-type HasRequest a = HasRequestT Identity a
-
-type HandlerT m = HasRequestT m (Either ServerErr Response)
-
-type Handler = HandlerT Identity 
+type HasRequestT m a = Monad m => ReaderT Request m a
 
 instance ToApplication Handler where
-  toApplication action req respond = respond $ runHandler action req
+  toApplication hdr req respond = do
+     hdr' <- runHandler hdr req
+     let response = unEither hdr'
+     respond response
+    where
+      unEither :: Either ServerErr Response -> Response
+      unEither (Right a)  = a
+      unEither (Left err) = responseServerError err
 
-returnResponse :: Response -> Handler
-returnResponse = return . Right
-
-throwErr :: ServerErr -> Handler
-throwErr = return . Left
-
-runHandlerT :: HandlerT m -> Request -> m (Either ServerErr Response)
-runHandlerT = runReaderT
-
-runHandler :: Handler -> Request -> Response
-runHandler act req = case runIdentity $ runHandlerT act req of
-  Right response -> response
-  Left serverErr -> responseServerError serverErr
+runHandler :: Handler -> Request -> IO (Either ServerErr Response)
+runHandler hdr req = runExceptT (runReaderT hdr req)
 
 json :: (FromJSON a, ToJSON a) => a -> Handler
-json jsonData = returnResponse $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
+json jsonData = return $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
 
 maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Handler
 maybeJson jsonData =
-  returnResponse $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
+  return $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
 
 textPlain :: Text -> Handler
-textPlain txt = returnResponse $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
+textPlain txt = return $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
 textHtml :: Text -> Handler
-textHtml html = returnResponse $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
+textHtml html = return $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
 
-requestMethod :: HasRequest Method
+requestMethod :: HasRequestT m Method
 requestMethod = asks Wai.requestMethod
 
-httpVersion :: HasRequest HttpVersion
+httpVersion :: HasRequestT m HttpVersion
 httpVersion = asks Wai.httpVersion
 
-rawPathInfo :: HasRequest ByteString
+rawPathInfo :: HasRequestT m ByteString
 rawPathInfo = asks Wai.rawPathInfo
 
-rawQueryString :: HasRequest ByteString
+rawQueryString :: HasRequestT m ByteString
 rawQueryString = asks Wai.rawQueryString
 
-requestHeaders :: HasRequest RequestHeaders
+requestHeaders :: HasRequestT m RequestHeaders
 requestHeaders = asks Wai.requestHeaders
 
-isSecure :: HasRequest Bool
+isSecure :: HasRequestT m Bool
 isSecure = asks Wai.isSecure
 
-remoteHost :: HasRequest SockAddr
+remoteHost :: HasRequestT m SockAddr
 remoteHost = asks Wai.remoteHost
 
-pathInfo :: HasRequest [Text]
+pathInfo :: HasRequestT m [Text]
 pathInfo = asks Wai.pathInfo
 
-queryString :: HasRequest Query
+queryString :: HasRequestT m Query
 queryString = asks Wai.queryString
 
-requestBodyChunk :: HasRequest (IO ByteString)
+requestBodyChunk :: HasRequestT m (IO ByteString)
 requestBodyChunk = asks Wai.getRequestBodyChunk
 
-vault :: HasRequest Vault
+vault :: HasRequestT m Vault
 vault = asks Wai.vault
 
-requestBodyLength :: HasRequest RequestBodyLength
+requestBodyLength :: HasRequestT m RequestBodyLength
 requestBodyLength = asks Wai.requestBodyLength
 
-requestHeaderHost :: HasRequest (Maybe ByteString)
+requestHeaderHost :: HasRequestT m (Maybe ByteString)
 requestHeaderHost = asks Wai.requestHeaderHost
 
-requestHeaderRange :: HasRequest (Maybe ByteString)
+requestHeaderRange :: HasRequestT m (Maybe ByteString)
 requestHeaderRange = asks Wai.requestHeaderRange
 
-requestHeaderReferer :: HasRequest (Maybe ByteString)
+requestHeaderReferer :: HasRequestT m (Maybe ByteString)
 requestHeaderReferer = asks Wai.requestHeaderReferer
 
-requestHeaderUserAgent :: HasRequest (Maybe ByteString)
+requestHeaderUserAgent :: HasRequestT m (Maybe ByteString)
 requestHeaderUserAgent = asks Wai.requestHeaderUserAgent
 
-getQuery :: ByteString -> HasRequest (Maybe ByteString)
+getQuery :: ByteString -> HasRequestT m (Maybe ByteString)
 getQuery key = join <$> (lookup key <$> queryString)
