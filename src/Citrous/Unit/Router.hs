@@ -17,35 +17,48 @@ module Citrous.Unit.Router
   , (</>)
   ) where
 
-import           Citrous.Unit.Application (ToApplication(..))
-import           Control.Monad.Reader (ReaderT, runReaderT, ask)
-import           Control.Monad.Trans (lift)
-import           Data.Attoparsec.ByteString (Parser, endOfInput, many1, parseOnly, string, takeWhile1)
+import           Citrous.Unit.Application         (ToApplication(..))
+import           Citrous.Unit.ServerErr           (err404, responseServerError)
+import           Control.Monad.Error.Class        (throwError)
+import           Control.Monad.Reader             (ReaderT, ask, runReaderT)
+import           Control.Monad.Trans              (lift)
+import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1, parseOnly, string, takeWhile1)
 import           Data.Attoparsec.ByteString.Char8 (char, digit)
-import qualified Data.ByteString as BS
-import           Data.ByteString (ByteString)
-import qualified Data.Text as T
-import           Data.Text (Text)
-import           Data.Utf8Convertible (convert)
-import           Network.Wai (Request, rawPathInfo, requestMethod, Application)
-import           Citrous.Unit.ServerErr (responseServerError, err404)
-import           Data.Maybe (fromMaybe)
-import           Network.HTTP.Types
-                    ( Method
-                    , methodGet
-                    , methodPost
-                    , methodHead
-                    , methodPut
-                    , methodDelete
-                    , methodTrace
-                    , methodConnect
-                    , methodOptions
-                    , methodPatch
-                    )
+import qualified Data.ByteString                  as BS
+import           Data.ByteString                  (ByteString)
+import           Data.Extensible                  (type (>:))
+import           Data.Extensible.Effect           (Eff, leaveEff, liftEff)
+import           Data.Extensible.Effect.Default
+import           Data.Maybe                       (fromMaybe)
+import qualified Data.Text                        as T
+import           Data.Text                        (Text)
+import           Data.Utf8Convertible             (convert)
+import           Network.HTTP.Types               (Method, methodConnect, methodDelete, methodGet
+                                                  , methodHead, methodOptions, methodPatch
+                                                  , methodPost, methodPut, methodTrace
+                                                  )
+import           Network.Wai                      (Application, Request, rawPathInfo, requestMethod)
 
 {-| Represent routing by returning the first matching Handler by the Either monad
 -}
-type Routes a = ReaderT BS.ByteString (Either a) ()
+type Routes a = Eff '[ ReaderDef BS.ByteString, EitherDef a] ()
+
+runRoutes' :: Routes a -> BS.ByteString -> Either a ()
+runRoutes' routes = leaveEff . runEitherDef . runReaderDef routes
+
+{-| To achieve an early return, the value goes into the Left of Either
+-}
+earlyReturn :: a -> Routes a
+earlyReturn = throwError
+
+{-| Resolve Routes
+-}
+runRoutes :: Routes a -> Request -> Maybe a
+runRoutes routes req = do
+  let route = requestMethod req <> rawPathInfo req
+  case runRoutes' routes route of
+    Right _ -> Nothing
+    Left action -> Just action
 
 instance (ToApplication a) => ToApplication (Routes a) where
   toApplication routes req = maybe defaultNotFound toApplication (runRoutes routes req) req
@@ -53,43 +66,33 @@ instance (ToApplication a) => ToApplication (Routes a) where
 defaultNotFound :: Application
 defaultNotFound req respond = respond $ responseServerError err404
 
-{-| Resolve Routes
--}
-runRoutes :: Routes a -> Request -> Maybe a
-runRoutes routes req = do
-  let route = requestMethod req <> rawPathInfo req
-  case runReaderT routes route of
-    Right _ -> Nothing
-    Left action -> Just action
-
 {-| Generate Routes
 -}
-get, post, head, put, delete, trace, connect, options, patch  :: Parser (HList a) -> Fn a t -> Routes t
-get = methodPathParser methodGet
-post = methodPathParser methodPost
-head = methodPathParser methodHead
-put = methodPathParser methodPut
-delete = methodPathParser methodDelete
-trace = methodPathParser methodTrace
-connect = methodPathParser methodConnect
-options = methodPathParser methodOptions
-patch = methodPathParser methodPatch
+get, post, head, put, delete, trace, connect, options, patch :: Parser (HList a) -> Fn a t -> Routes t
+get = routesParser methodGet
+post = routesParser methodPost
+head = routesParser methodHead
+put = routesParser methodPut
+delete = routesParser methodDelete
+trace = routesParser methodTrace
+connect = routesParser methodConnect
+options = routesParser methodOptions
+patch = routesParser methodPatch
 
 {-| Always generate Routes
 -}
 absolute :: a -> Routes a
-absolute = lift . Left
+absolute = earlyReturn
 
 {-| Generate Routes
 -}
-methodPathParser :: Method -> Parser (HList a) -> Fn a t -> Routes t
-methodPathParser method pathParser action = do
+routesParser :: Method -> Parser (HList a) -> Fn a t -> Routes t
+routesParser method pathParser action = do
   let parser = match method >> apply action <$> (pathParser <* endOfInput)
   route <- ask
-  lift $
-    case parseOnly parser route of
-      Right action -> Left action
-      Left _ -> Right ()
+  case parseOnly parser route of
+    Right action -> earlyReturn action
+    Left _ -> return ()
 
 {-| Pick Int from path
 -}

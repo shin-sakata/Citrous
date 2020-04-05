@@ -34,6 +34,9 @@ dependencies:
   - bytestring
   - utf8-string
   - exceptions
+  - extensible
+  - extensible-skeleton
+  - membership
 
 default-extensions:
   - BangPatterns

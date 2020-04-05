@@ -1,10 +1,10 @@
 module Main where
 
 import Citrous.API
+import Control.Monad.Error.Class (throwError)
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Text (Text)
 import GHC.Generics (Generic)
-import Data.Aeson (FromJSON, ToJSON)
-import Control.Monad.Error.Class (throwError)
 
 main :: IO ()
 main = do
@@ -31,9 +31,8 @@ echoUserAction :: Text -> Int -> Handler
 echoUserAction name age = json $ User name age
 
 notFount :: Handler
-notFount =
-  throwError err404
-  
+notFount = throwError err404
+
 data User =
   User
     { name :: Text

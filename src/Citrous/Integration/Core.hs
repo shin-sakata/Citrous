@@ -17,7 +17,7 @@ runCitrous :: ToApplication a => Port -> a -> IO ()
 runCitrous port = run port . toApplication
 
 runCitrousEnv :: ToApplication a => Port -> a -> IO ()
-runCitrousEnv port = runEnv port . toApplication 
+runCitrousEnv port = runEnv port . toApplication
 
 runCitrousSettings :: ToApplication a => Settings -> a -> IO ()
 runCitrousSettings settings = runSettings settings . toApplication
