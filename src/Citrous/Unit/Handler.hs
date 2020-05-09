@@ -1,84 +1,89 @@
 module Citrous.Unit.Handler
-  ( Handler
-  , toApplication
-  , responseLBS
-  , maybeJson
-  , textPlain
-  , textHtml
-  , json
-  , RequestBodyLength(..)
-  , requestMethod
-  , httpVersion
-  , rawPathInfo
-  , rawQueryString
-  , requestHeaders
-  , isSecure
-  , remoteHost
-  , pathInfo
-  , queryString
-  , requestBodyChunk
-  , vault
-  , requestBodyLength
-  , requestHeaderHost
-  , requestHeaderRange
-  , requestHeaderReferer
-  , requestHeaderUserAgent
-  , getQuery
-  , runHandler
-  ) where
+  ( Handler,
+    toApplication,
+    responseLBS,
+    maybeJson,
+    textPlain,
+    textHtml,
+    json,
+    RequestBodyLength (..),
+    requestMethod,
+    httpVersion,
+    rawPathInfo,
+    rawQueryString,
+    requestHeaders,
+    isSecure,
+    remoteHost,
+    pathInfo,
+    queryString,
+    requestBodyChunk,
+    vault,
+    requestBodyLength,
+    requestHeaderHost,
+    requestHeaderRange,
+    requestHeaderReferer,
+    requestHeaderUserAgent,
+    getQuery,
+    runHandler,
+  )
+where
 
-import           Citrous.Unit.Application (ToApplication (..))
-import           Control.Monad            (join)
-import           Control.Monad.Identity   (Identity, runIdentity)
-import           Control.Monad.Trans      (liftIO, lift)
-import           Data.Aeson               (FromJSON, ToJSON, encode)
-import           Data.ByteString          (ByteString)
-import           Data.Text                (Text)
-import           Data.Utf8Convertible     (ConvertTo, convert)
-import           Data.Vault.Lazy          (Vault)
-import           Network.HTTP.Types       (HttpVersion, Method, Query,
-                                           RequestHeaders, ok200)
-import           Network.Socket           (SockAddr)
-import           Network.Wai              (Application, Request,
-                                           RequestBodyLength, Response,
-                                           responseLBS)
-import qualified Network.Wai              as Wai
-import           Control.Monad.Reader     (Reader, ReaderT, ask, asks,
-                                           runReader, runReaderT)
-import           Control.Monad.Trans.Except
-                 (ExceptT, runExceptT)
-import           Citrous.Unit.ServerErr
-                 (ServerErr, responseServerError)
+import           Citrous.Unit.Application       (ToApplication (..))
+import           Citrous.Unit.ServerErr         (ServerErr, responseServerError)
+import           Control.Monad                  (join)
+import           Control.Monad.Identity         (Identity, runIdentity)
+import           Control.Monad.Reader           (Reader, ReaderT, ask, asks,
+                                                 runReader, runReaderT)
+import           Control.Monad.Reader.Class     (MonadReader)
+import           Control.Monad.Trans            (lift, liftIO)
+import           Control.Monad.Trans.Except     (ExceptT, runExceptT)
+import           Data.Aeson                     (FromJSON, ToJSON, encode)
+import           Data.ByteString                (ByteString)
+import           Data.Extensible                (type (>:))
+import           Data.Extensible.Class          (Member)
+import           Data.Extensible.Effect         (Eff, ReaderEff, leaveEff,
+                                                 liftEff, retractEff)
+import           Data.Extensible.Effect.Default
+import           Data.Text                      (Text)
+import           Data.Utf8Convertible           (ConvertTo, convert)
+import           Data.Vault.Lazy                (Vault)
+import           Network.HTTP.Types             (HttpVersion, Method, Query,
+                                                 RequestHeaders, ok200)
+import           Network.Socket                 (SockAddr)
+import           Network.Wai                    (Application, Request,
+                                                 RequestBodyLength, Response,
+                                                 responseLBS)
+import qualified Network.Wai                    as Wai
 
-type Handler = ReaderT Request (ExceptT ServerErr IO) Response
-
-type HasRequestT m a = Monad m => ReaderT Request m a
+type Handler = Eff '[ReaderDef Request, EitherDef ServerErr, "IO" >: IO] Response
 
 instance ToApplication Handler where
   toApplication hdr req respond = do
-     hdr' <- runHandler hdr req
-     let response = unEither hdr'
-     respond response
+    eitherResponse <- runHandler hdr req
+    let response = unEither eitherResponse
+    respond response
     where
       unEither :: Either ServerErr Response -> Response
       unEither (Right a)  = a
       unEither (Left err) = responseServerError err
 
 runHandler :: Handler -> Request -> IO (Either ServerErr Response)
-runHandler hdr req = runExceptT (runReaderT hdr req)
+runHandler hdr req = (retractEff . runEitherDef . flip runReaderDef req) hdr
 
-json :: (FromJSON a, ToJSON a) => a -> Handler
+json :: (FromJSON a, ToJSON a, Monad m) => a -> m Response
 json jsonData = return $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (encode jsonData)
 
-maybeJson :: (FromJSON a, ToJSON a) => Maybe a -> Handler
+maybeJson :: (FromJSON a, ToJSON a, Monad m) => Maybe a -> m Response
 maybeJson jsonData =
   return $ responseLBS ok200 [("Content-Type", "application/json; charset=utf-8")] (maybe "null" encode jsonData)
 
-textPlain :: Text -> Handler
+textPlain :: Monad m => Text -> m Response
 textPlain txt = return $ responseLBS ok200 [("Content-Type", "text/plain; charset=utf-8")] (convert txt)
 
-textHtml :: Text -> Handler
+textHtml :: Monad m => Text -> m Response
 textHtml html = return $ responseLBS ok200 [("Content-Type", "text/html; charset=utf-8")] (convert html)
+
+type HasRequestT m a = MonadReader Request m => m a
 
 requestMethod :: HasRequestT m Method
 requestMethod = asks Wai.requestMethod
