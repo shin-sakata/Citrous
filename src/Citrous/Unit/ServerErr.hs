@@ -1,7 +1,6 @@
 module Citrous.Unit.ServerErr where
 
 import           Data.ByteString.Lazy (ByteString)
-import           Data.Utf8Convertible (convert)
 import           Network.HTTP.Types
 import           Network.Wai          (Response, responseLBS)
 

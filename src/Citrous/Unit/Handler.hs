@@ -39,13 +39,13 @@ import           Control.Monad.Trans            (lift, liftIO)
 import           Control.Monad.Trans.Except     (ExceptT, runExceptT)
 import           Data.Aeson                     (FromJSON, ToJSON, encode)
 import           Data.ByteString                (ByteString)
+import           Data.Convertible.Utf8          (convert)
 import           Data.Extensible                (type (>:))
 import           Data.Extensible.Class          (Member)
 import           Data.Extensible.Effect         (Eff, ReaderEff, leaveEff,
                                                  liftEff, retractEff)
 import           Data.Extensible.Effect.Default
 import           Data.Text                      (Text)
-import           Data.Utf8Convertible           (ConvertTo, convert)
 import           Data.Vault.Lazy                (Vault)
 import           Network.HTTP.Types             (HttpVersion, Method, Query,
                                                  RequestHeaders, ok200)

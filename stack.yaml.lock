@@ -25,6 +25,17 @@ packages:
       sha256: e7fd2d42784808415558f54c66450ae60d547c66b7c5349ddd942078a3c2bbae
   original:
     hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
+- completed:
+    name: utf8-conversions
+    version: 0.1.0.4
+    git: https://github.com/chemirea/utf8-conversions.git
+    pantry-tree:
+      size: 793
+      sha256: 4a04e78de74906057a8ee2b941e7954f321f54ef40e8daabdd1e67606bd86873
+    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
+  original:
+    git: https://github.com/chemirea/utf8-conversions.git
+    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
 snapshots:
 - completed:
     size: 491387

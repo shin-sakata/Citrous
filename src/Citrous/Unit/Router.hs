@@ -29,13 +29,13 @@ import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1,
 import           Data.Attoparsec.ByteString.Char8 (char, digit)
 import           Data.ByteString                  (ByteString)
 import qualified Data.ByteString                  as BS
+import           Data.Convertible.Utf8            (convert)
 import           Data.Extensible                  (type (>:))
 import           Data.Extensible.Effect           (Eff, leaveEff, liftEff)
 import           Data.Extensible.Effect.Default
 import           Data.Maybe                       (fromMaybe)
 import           Data.Text                        (Text)
 import qualified Data.Text                        as T
-import           Data.Utf8Convertible             (convert)
 import           Network.HTTP.Types               (Method, methodConnect,
                                                    methodDelete, methodGet,
                                                    methodHead, methodOptions,

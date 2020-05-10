@@ -37,6 +37,7 @@ dependencies:
   - extensible
   - extensible-skeleton
   - membership
+  - utf8-conversions
 
 default-extensions:
   - BangPatterns
