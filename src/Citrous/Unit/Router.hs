@@ -11,6 +11,9 @@ module Citrous.Unit.Router
     int,
     match,
     text,
+    integer,
+    bytestring,
+    string,
     runRoutes,
     Routes,
     absolute,
@@ -24,8 +27,8 @@ import           Control.Monad.Error.Class        (throwError)
 import           Control.Monad.Reader             (ReaderT, ask, runReaderT)
 import           Control.Monad.Trans              (lift)
 import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1,
-                                                   parseOnly, string,
-                                                   takeWhile1)
+                                                   parseOnly, takeWhile1)
+import qualified Data.Attoparsec.ByteString       as Attoparsec
 import           Data.Attoparsec.ByteString.Char8 (char, digit)
 import           Data.ByteString                  (ByteString)
 import qualified Data.ByteString                  as BS
@@ -106,11 +109,39 @@ text = do
   str <- convert <$> takeWhile1 (/= BS.head "/")
   return $ str ::: HNil
 
+-- | Pick Integer from path
+integer :: Parser (HList '[Integer])
+integer = do
+  i <- read <$> many1 digit
+  return $ i ::: HNil
+
+-- | Pick ByteString from path
+bytestring :: Parser (HList '[ByteString])
+bytestring = do
+  str <- takeWhile1 (/= BS.head "/")
+  return $ str ::: HNil
+
+-- | Pick ByteString from path
+string :: Parser (HList '[String])
+string = do
+  str <- convert <$> takeWhile1 (/= BS.head "/")
+  return $ str ::: HNil
+
 -- | Matches a Bytestring but does not return a value
 match :: ByteString -> Parser (HList '[])
 match txt = do
-  string txt
+  Attoparsec.string txt
   return HNil
+
+-- | Append HList Parser
+(</>) :: Parser (HList xs) -> Parser (HList ys) -> Parser (HList (xs ++ ys))
+(</>) pl pr = do
+  l <- pl
+  char '/'
+  r <- pr
+  return $ hAppend l r
+
+infixr 5 </>
 
 -- | Type Level List (Heterogeneous List)
 data HList :: [*] -> * where
@@ -140,16 +171,6 @@ type instance (x ': xs) ++ ys = x ': (xs ++ ys)
 hAppend :: HList xs -> HList ys -> HList (xs ++ ys)
 hAppend HNil ys          = ys
 hAppend (x1 ::: HNil) ys = x1 ::: ys
-
--- | Append HList Parser
-(</>) :: Parser (HList xs) -> Parser (HList ys) -> Parser (HList (xs ++ ys))
-(</>) pl pr = do
-  l <- pl
-  char '/'
-  r <- pr
-  return $ hAppend l r
-
-infixr 5 </>
 
 -- | Apply HList to function
 apply :: Fn xs r -> HList xs -> r
