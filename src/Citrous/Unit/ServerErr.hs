@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Citrous.Unit.ServerErr where
 
@@ -23,258 +22,106 @@ mkServerErr = ServerErr
 -- re-export
 mkStatus = Network.HTTP.Types.mkStatus
 
-err300 :: ServerErr
-err300 =
+errWithStatus :: Status -> ServerErr
+errWithStatus status =
   ServerErr
-    { errHttpStatus = status300,
-      errBody = "",
-      errHeaders = []
+    { errHttpStatus = status,
+      errBody = mempty,
+      errHeaders = mempty
     }
+
+err300 :: ServerErr
+err300  = errWithStatus status300
 
 err301 :: ServerErr
-err301 =
-  ServerErr
-    { errHttpStatus = status301,
-      errBody = "",
-      errHeaders = []
-    }
+err301  = errWithStatus status301
 
 err302 :: ServerErr
-err302 =
-  ServerErr
-    { errHttpStatus = status302,
-      errBody = "",
-      errHeaders = []
-    }
+err302  = errWithStatus status302
 
 err303 :: ServerErr
-err303 =
-  ServerErr
-    { errHttpStatus = status303,
-      errBody = "",
-      errHeaders = []
-    }
+err303  = errWithStatus status303
 
 err304 :: ServerErr
-err304 =
-  ServerErr
-    { errHttpStatus = status304,
-      errBody = "",
-      errHeaders = []
-    }
+err304  = errWithStatus status304
 
 err305 :: ServerErr
-err305 =
-  ServerErr
-    { errHttpStatus = status305,
-      errBody = "",
-      errHeaders = []
-    }
+err305  = errWithStatus status305
 
 err307 :: ServerErr
-err307 =
-  ServerErr
-    { errHttpStatus = status307,
-      errBody = "",
-      errHeaders = []
-    }
+err307  = errWithStatus status307
 
 err400 :: ServerErr
-err400 =
-  ServerErr
-    { errHttpStatus = status400,
-      errBody = "",
-      errHeaders = []
-    }
+err400  = errWithStatus status400
 
 err401 :: ServerErr
-err401 =
-  ServerErr
-    { errHttpStatus = status401,
-      errBody = "",
-      errHeaders = []
-    }
+err401  = errWithStatus status401
 
 err402 :: ServerErr
-err402 =
-  ServerErr
-    { errHttpStatus = status402,
-      errBody = "",
-      errHeaders = []
-    }
+err402  = errWithStatus status402
 
 err403 :: ServerErr
-err403 =
-  ServerErr
-    { errHttpStatus = status403,
-      errBody = "",
-      errHeaders = []
-    }
+err403  = errWithStatus status403
 
 err404 :: ServerErr
-err404 =
-  ServerErr
-    { errHttpStatus = status404,
-      errBody = "",
-      errHeaders = []
-    }
+err404  = errWithStatus status404
 
 err405 :: ServerErr
-err405 =
-  ServerErr
-    { errHttpStatus = status405,
-      errBody = "",
-      errHeaders = []
-    }
+err405  = errWithStatus status405
 
 err406 :: ServerErr
-err406 =
-  ServerErr
-    { errHttpStatus = status406,
-      errBody = "",
-      errHeaders = []
-    }
+err406  = errWithStatus status406
 
 err407 :: ServerErr
-err407 =
-  ServerErr
-    { errHttpStatus = status407,
-      errBody = "",
-      errHeaders = []
-    }
+err407  = errWithStatus status407
 
 err409 :: ServerErr
-err409 =
-  ServerErr
-    { errHttpStatus = status409,
-      errBody = "",
-      errHeaders = []
-    }
+err409  = errWithStatus status409
 
 err410 :: ServerErr
-err410 =
-  ServerErr
-    { errHttpStatus = status410,
-      errBody = "",
-      errHeaders = []
-    }
+err410  = errWithStatus status410
 
 err411 :: ServerErr
-err411 =
-  ServerErr
-    { errHttpStatus = status411,
-      errBody = "",
-      errHeaders = []
-    }
+err411  = errWithStatus status411
 
 err412 :: ServerErr
-err412 =
-  ServerErr
-    { errHttpStatus = status412,
-      errBody = "",
-      errHeaders = []
-    }
+err412  = errWithStatus status412
 
 err413 :: ServerErr
-err413 =
-  ServerErr
-    { errHttpStatus = status413,
-      errBody = "",
-      errHeaders = []
-    }
+err413  = errWithStatus status413
 
 err414 :: ServerErr
-err414 =
-  ServerErr
-    { errHttpStatus = status414,
-      errBody = "",
-      errHeaders = []
-    }
+err414  = errWithStatus status414
 
 err415 :: ServerErr
-err415 =
-  ServerErr
-    { errHttpStatus = status415,
-      errBody = "",
-      errHeaders = []
-    }
+err415  = errWithStatus status415
 
 err416 :: ServerErr
-err416 =
-  ServerErr
-    { errHttpStatus = status416,
-      errBody = "",
-      errHeaders = []
-    }
+err416  = errWithStatus status416
 
 err417 :: ServerErr
-err417 =
-  ServerErr
-    { errHttpStatus = status417,
-      errBody = "",
-      errHeaders = []
-    }
+err417  = errWithStatus status417
 
 err418 :: ServerErr
-err418 =
-  ServerErr
-    { errHttpStatus = status418,
-      errBody = "",
-      errHeaders = []
-    }
+err418  = errWithStatus status418
 
 err422 :: ServerErr
-err422 =
-  ServerErr
-    { errHttpStatus = status422,
-      errBody = "",
-      errHeaders = []
-    }
+err422  = errWithStatus status422
 
 err500 :: ServerErr
-err500 =
-  ServerErr
-    { errHttpStatus = status500,
-      errBody = "",
-      errHeaders = []
-    }
+err500  = errWithStatus status500
 
 err501 :: ServerErr
-err501 =
-  ServerErr
-    { errHttpStatus = status501,
-      errBody = "",
-      errHeaders = []
-    }
+err501  = errWithStatus status501
 
 err502 :: ServerErr
-err502 =
-  ServerErr
-    { errHttpStatus = status502,
-      errBody = "",
-      errHeaders = []
-    }
+err502  = errWithStatus status502
 
 err503 :: ServerErr
-err503 =
-  ServerErr
-    { errHttpStatus = status503,
-      errBody = "",
-      errHeaders = []
-    }
+err503  = errWithStatus status503
 
 err504 :: ServerErr
-err504 =
-  ServerErr
-    { errHttpStatus = status504,
-      errBody = "",
-      errHeaders = []
-    }
+err504  = errWithStatus status504
 
 err505 :: ServerErr
-err505 =
-  ServerErr
-    { errHttpStatus = status505,
-      errBody = "",
-      errHeaders = []
-    }
+err505  = errWithStatus status505
