@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+
 module Citrous.Unit.Application where
 
 import           Network.Wai (Application)

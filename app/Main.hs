@@ -1,10 +1,13 @@
+{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Citrous.API
-import Control.Monad.Error.Class (throwError)
-import Data.Aeson (FromJSON, ToJSON)
-import Data.Text (Text)
-import GHC.Generics (Generic)
+import           Citrous.API
+import           Control.Monad.Error.Class (throwError)
+import           Data.Aeson                (FromJSON, ToJSON)
+import           Data.Text                 (Text)
+import           GHC.Generics              (Generic)
 
 main :: IO ()
 main = do
@@ -33,11 +36,10 @@ echoUserAction name age = json $ User name age
 notFount :: Handler
 notFount = throwError err404
 
-data User =
-  User
+data User = User
     { name :: Text
     , age  :: Int
     }
-  deriving (Generic, Show)
+    deriving (Generic, Show)
 instance ToJSON User
 instance FromJSON User

@@ -1,3 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+
 module Citrous.Unit.ServerErr where
 
 import           Data.ByteString.Lazy (ByteString)

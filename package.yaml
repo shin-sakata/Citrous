@@ -39,45 +39,6 @@ dependencies:
   - membership
   - utf8-conversions
 
-default-extensions:
-  - BangPatterns
-  - BinaryLiterals
-  - ConstraintKinds
-  - DataKinds
-  - DefaultSignatures
-  - DeriveDataTypeable
-  - DeriveFoldable
-  - DeriveFunctor
-  - DeriveGeneric
-  - DeriveTraversable
-  - DoAndIfThenElse
-  - EmptyDataDecls
-  - ExistentialQuantification
-  - FlexibleContexts
-  - FlexibleInstances
-  - FunctionalDependencies
-  - GADTs
-  - GeneralizedNewtypeDeriving
-  - InstanceSigs
-  - KindSignatures
-  - LambdaCase
-  - MultiParamTypeClasses
-  - MultiWayIf
-  - NamedFieldPuns
-  - OverloadedStrings
-  - PartialTypeSignatures
-  - PatternGuards
-  - PolyKinds
-  - RankNTypes
-  - RecordWildCards
-  - ScopedTypeVariables
-  - StandaloneDeriving
-  - TupleSections
-  - TypeFamilies
-  - TypeOperators
-  - TypeSynonymInstances
-  - ViewPatterns
-
 library:
   source-dirs: src
 
