@@ -6,6 +6,14 @@ import           Data.ByteString.Lazy (ByteString)
 import           Network.HTTP.Types
 import           Network.Wai          (Response, responseLBS)
 
+class ResponseError e where
+  errorResponse :: e -> Response
+  errorResponse _ =
+    responseServerError err500
+
+instance ResponseError ServerErr where
+   errorResponse = responseServerError
+
 data ServerErr = ServerErr
     { errHttpStatus :: Status
     , errBody       :: ByteString
