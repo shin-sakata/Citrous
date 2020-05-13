@@ -3,39 +3,7 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: extensible-0.8@sha256:45ca089909ae434329e4d05dc557be94ff04f24c43ff9b915bd90c0599c83211,2911
-    pantry-tree:
-      size: 2097
-      sha256: d602c9d623afd9186a4d55898ef97f0dfb7f81ffbd5bae86e2238b3694d702fb
-  original:
-    hackage: extensible-0.8@sha256:45ca089909ae434329e4d05dc557be94ff04f24c43ff9b915bd90c0599c83211,2911
-- completed:
-    hackage: membership-0@sha256:3a11d8fd53cb1a76bb9273e6c929bbf9d649f109714bf487abb3143be04ddc81,995
-    pantry-tree:
-      size: 408
-      sha256: 3b593e0d14e848e318e745555776ebb25210e5e3dec4fde5d3c08ab51ceddc62
-  original:
-    hackage: membership-0@sha256:3a11d8fd53cb1a76bb9273e6c929bbf9d649f109714bf487abb3143be04ddc81,995
-- completed:
-    hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
-    pantry-tree:
-      size: 441
-      sha256: e7fd2d42784808415558f54c66450ae60d547c66b7c5349ddd942078a3c2bbae
-  original:
-    hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
-- completed:
-    name: utf8-conversions
-    version: 0.1.0.4
-    git: https://github.com/chemirea/utf8-conversions.git
-    pantry-tree:
-      size: 793
-      sha256: 4a04e78de74906057a8ee2b941e7954f321f54ef40e8daabdd1e67606bd86873
-    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
-  original:
-    git: https://github.com/chemirea/utf8-conversions.git
-    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
+packages: []
 snapshots:
 - completed:
     size: 491387

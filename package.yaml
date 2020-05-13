@@ -21,23 +21,6 @@ description:         Please see the README on GitHub at <https://github.com/Gith
 
 dependencies:
   - base >= 4.7 && < 5
-  - wai
-  - warp
-  - http-types
-  - aeson
-  - network
-  - vault
-  - text
-  - attoparsec
-  - mtl
-  - transformers
-  - bytestring
-  - utf8-string
-  - exceptions
-  - extensible
-  - extensible-skeleton
-  - membership
-  - utf8-conversions
 
 library:
   source-dirs: src
