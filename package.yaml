@@ -24,6 +24,8 @@ dependencies:
   - wai
   - warp
   - http-types
+  - http-media
+  - aeson
   - utf8-conversions
 
 library:
