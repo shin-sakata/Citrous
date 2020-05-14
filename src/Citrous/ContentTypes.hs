@@ -10,8 +10,7 @@
 
 module Citrous.ContentTypes where
 
-import           Data.Aeson                     (ToJSON, eitherDecode, encode)
-import           Data.Aeson.Types               (FromJSON)
+import           Data.Aeson                     (ToJSON, eitherDecode, encode, FromJSON)
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (ByteString, LazyByteString,
                                                  LazyText, Text)
