@@ -10,14 +10,14 @@
 
 module Citrous.ContentTypes where
 
-import           Data.Aeson                     (ToJSON, encode, eitherDecode)
+import           Data.Aeson                     (ToJSON, eitherDecode, encode)
+import           Data.Aeson.Types               (FromJSON)
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (ByteString, LazyByteString,
                                                  LazyText, Text)
 import           Data.Proxy                     (Proxy (..))
 import           Network.HTTP.Media             (MediaType, (//), (/:))
 import           Prelude                        hiding (head)
-import Data.Aeson.Types (FromJSON)
 
 data JSON
 
@@ -53,7 +53,7 @@ class Accept ctype => MimeDecode ctype a where
   mimeDecode :: LazyByteString -> Either String a
 
 instance FromJSON a => MimeDecode JSON a where
-    mimeDecode = eitherDecode
+  mimeDecode = eitherDecode
 
 instance MimeDecode TextPlain LazyText where
   mimeDecode = Right . convert
