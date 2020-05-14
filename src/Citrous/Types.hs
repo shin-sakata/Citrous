@@ -47,34 +47,31 @@ type Options = Impl 'OPTIONS 200
 type Patch = Impl 'PATCH 200
 
 class KnownMethod a where
-  methodVal' :: proxy a -> Method
+  methodVal :: Method
 
 instance KnownMethod 'GET where
-  methodVal' = const methodGet
+  methodVal = methodGet
 
 instance KnownMethod 'POST where
-  methodVal' = const methodPost
+  methodVal = methodPost
 
 instance KnownMethod 'PUT where
-  methodVal' = const methodPut
+  methodVal = methodPut
 
 instance KnownMethod 'DELETE where
-  methodVal' = const methodDelete
+  methodVal = methodDelete
 
 instance KnownMethod 'PATCH where
-  methodVal' = const methodPatch
+  methodVal = methodPatch
 
 instance KnownMethod 'HEAD where
-  methodVal' = const methodHead
+  methodVal = methodHead
 
 instance KnownMethod 'OPTIONS where
-  methodVal' = const methodOptions
+  methodVal = methodOptions
 
 instance KnownMethod 'TRACE where
-  methodVal' = const methodTrace
+  methodVal = methodTrace
 
 instance KnownMethod 'CONNECT where
-  methodVal' = const methodConnect
-
-methodVal :: forall k. KnownMethod k => Method
-methodVal = methodVal' (Proxy :: Proxy k)
+  methodVal = methodConnect
