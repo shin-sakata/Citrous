@@ -1,0 +1,2 @@
+module Citrous.ContentType where
+
