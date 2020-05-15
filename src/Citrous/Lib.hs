@@ -28,10 +28,11 @@ type Hoge = "Hello" </> "hoge" </> Get '[Int] Int
 
 type Foo = "User" </> Capture "id" Int </> Get '[] Int
 
-type Server a = HandlerT a Identity
+type Server a = ServerT Identity a
+type ServerT m a = HandlerT a m
 
 hogeServer :: Server Foo
-hogeServer = Identity
+hogeServer n = return n
 
 class API layout content where
   type HandlerT layout (m :: * -> *) :: *
