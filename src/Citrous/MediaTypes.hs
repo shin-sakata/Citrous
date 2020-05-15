@@ -1,14 +1,9 @@
 {-# LANGUAGE AllowAmbiguousTypes   #-}
-{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeOperators         #-}
 
-module Citrous.ContentTypes where
+module Citrous.MediaTypes where
 
 import           Data.Aeson                     (ToJSON, eitherDecode, encode, FromJSON)
 import           Data.Convertible.Utf8          (convert)
@@ -23,15 +18,15 @@ data JSON
 data TextPlain
 
 class Accept ctype where
-  contentTypes :: MediaType
+  mediaType :: MediaType
 
 instance Accept JSON where
-  contentTypes =
+  mediaType =
     "application" // "json" /: ("charset", "UTF-8")
 
 instance Accept TextPlain where
-  contentTypes =
-    "text" // "plain" /: ("charset", "utf-8")
+  mediaType =
+    "text" // "plain" /: ("charset", "UTF-8")
 
 class Accept ctype => MimeEncode ctype a where
   mimeEncode :: a -> LazyByteString
