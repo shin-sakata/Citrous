@@ -1,22 +1,25 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleInstances   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE PolyKinds           #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module Citrous.Lib where
 
 import           Citrous.Capture
+import           Citrous.Content                (Context)
 import           Citrous.Types
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (Text)
+import           Data.Functor.Identity          (Identity (..))
 import           Data.Proxy                     (Proxy (..))
-import           GHC.TypeLits                   (KnownSymbol, Nat, Symbol,
-                                                 symbolVal)
+import           GHC.TypeLits                   (KnownNat, KnownSymbol, Nat,
+                                                 Symbol, symbolVal)
 
 libMain :: IO ()
 libMain = print $ match @Foo ["User", "11"]
@@ -25,20 +28,29 @@ type Hoge = "Hello" </> "hoge" </> Get '[Int] Int
 
 type Foo = "User" </> Capture "id" Int </> Get '[] Int
 
-class API layout where
+type Server a = HandlerT a Identity
+
+hogeServer :: Server Foo
+hogeServer = Identity
+
+class API layout content where
+  type HandlerT layout (m :: * -> *) :: *
   match :: [Text] -> Bool
 
-instance (KnownSymbol path, API subLayout) => API (path </> subLayout) where
-  match []             = False
-  match (first:rest) = first == symbol @path && match @subLayout rest
+instance (KnownSymbol path, API subLayout content) => API (path </> subLayout) content where
+  type HandlerT (path </> subLayout) m = HandlerT subLayout m
+  match []           = False
+  match (first:rest) = first == symbol @path && match @subLayout @content rest
 
-instance (FromPath cap, API subLayout) => API (Capture path cap </> subLayout) where
+instance (FromPath cap, API subLayout content) => API (Capture path cap </> subLayout) content where
+  type HandlerT (Capture path cap </> subLayout) m = cap -> HandlerT subLayout m
   match [] = False
   match (first:rest) = case fromPath @cap first of
-    Just a  -> match @subLayout rest
+    Just a  -> match @subLayout @content rest
     Nothing -> False
 
-instance API (Impl method statusCode contentTypes content) where
+instance (KnownMethod method, KnownNat statusCode) => API (Impl method statusCode contentTypes a) content where
+  type HandlerT (Impl method statusCode contentTypes a) m = m a
   match [] = True
   match _  = False
 
