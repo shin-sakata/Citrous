@@ -4,8 +4,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Citrous.Impl
-  ( module Citrous.Impl,
+module Citrous.Unit.Impl
+  ( module Citrous.Unit.Impl,
     StdMethod (..),
   )
 where

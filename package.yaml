@@ -27,6 +27,7 @@ dependencies:
   - http-media
   - aeson
   - utf8-conversions
+  - extensible-effects
 
 library:
   source-dirs: src

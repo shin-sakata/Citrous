@@ -1,4 +1,4 @@
-module Citrous.Handler where
+module Citrous.Unit.Handler where
 
 import           Data.Functor.Identity (Identity, runIdentity)
 

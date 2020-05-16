@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Citrous.HasHandler where
+module Citrous.Integration.HasHandler where
 
 import Citrous.Unit.Impl (Impl, KnownMethod)
 import Citrous.Unit.MediaTypes (MimeEncode)
