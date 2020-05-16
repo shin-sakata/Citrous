@@ -11,9 +11,9 @@
 
 module Citrous.Lib where
 
-import           Citrous.Capture
-import           Citrous.Content                (Context)
-import           Citrous.Types
+import           Citrous.Unit.Capture
+import           Citrous.Unit.Content           (Context)
+import           Citrous.Unit.Impl
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (Text)
 import           Data.Functor.Identity          (Identity (..))

@@ -4,7 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-module Citrous.Capture where
+module Citrous.Unit.Capture where
 
 import           Data.Convertible.Utf8          (convert, Convertible)
 import           Data.Convertible.Utf8.Internal (Text, ByteString)

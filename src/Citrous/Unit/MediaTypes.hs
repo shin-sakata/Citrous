@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
-module Citrous.MediaTypes where
+module Citrous.Unit.MediaTypes where
 
 import           Data.Aeson                     (ToJSON, eitherDecode, encode, FromJSON)
 import           Data.Convertible.Utf8          (convert)

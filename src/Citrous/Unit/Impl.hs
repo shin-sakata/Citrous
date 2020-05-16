@@ -4,8 +4,8 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Citrous.Types
-  ( module Citrous.Types,
+module Citrous.Impl
+  ( module Citrous.Impl,
     StdMethod (..),
   )
 where
@@ -26,7 +26,7 @@ import Network.HTTP.Types.Method
     methodTrace,
   )
 
-data Impl (method :: k) (statusCode :: Nat) (contentTypes :: [*]) (content :: *)
+data Impl (method :: k) (statusCode :: Nat) (mediaTypes :: [*]) (content :: *)
 
 type Get = Impl 'GET 200
 
