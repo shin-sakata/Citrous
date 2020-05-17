@@ -20,7 +20,6 @@
     <orderEntry type="library" name="membership-0" level="project" />
     <orderEntry type="library" name="utf8-conversions-0.1.0.4" level="project" />
     <orderEntry type="library" name="wai-3.2.2.1" level="project" />
-    <orderEntry type="library" name="warp-3.3.11" level="project" />
     <orderEntry type="library" name="attoparsec-0.13.2.4" level="project" />
     <orderEntry type="library" name="base-compat-batteries-0.11.1" level="project" />
     <orderEntry type="library" name="bytestring-0.10.10.0" level="project" />
@@ -105,5 +104,6 @@
     <orderEntry type="library" name="exceptions-0.10.4" level="project" />
     <orderEntry type="library" name="resourcet-1.2.4" level="project" />
     <orderEntry type="library" name="unliftio-core-0.1.2.0" level="project" />
+    <orderEntry type="library" name="warp-3.3.11" level="project" />
   </component>
 </module>

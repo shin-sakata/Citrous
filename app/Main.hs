@@ -16,7 +16,7 @@ import           Network.Wai.Handler.Warp       (run)
 routes :: Routes
 routes = do
   route @(Get '[TextPlain] Text) rootHandler
-  route @(Get '[TextPlain] String) htmlHandler
+  route @(Post '[TextPlain] String) htmlHandler
 
 rootHandler :: Handler Text
 rootHandler = return "Hello Citrous!"

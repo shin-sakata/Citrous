@@ -13,20 +13,25 @@
 module Citrous.Integration.HasHandler where
 
 import           Citrous.Integration.Handler        (Handler, runHandler)
-import           Citrous.Integration.Routes         (Routes, earlyReturnRoute)
+import           Citrous.Integration.Routes         (Routes, RoutingErr (..),
+                                                     accumFail, badMethod,
+                                                     earlyReturnRoute)
 import           Citrous.Integration.RoutingRespond (RoutingRespond)
-import           Citrous.Unit.Impl                  (Impl, KnownMethod)
+import           Citrous.Unit.Impl                  (Impl, KnownMethod,
+                                                     methodStdVal, methodVal)
 import           Citrous.Unit.MediaTypes            (MimeEncode, mimeEncode)
-import           Citrous.Unit.ServerErr             (ServerErr)
+import           Citrous.Unit.ServerErr             (ServerErr, err405)
+import           Control.Monad.Error.Class          (throwError)
+import           Control.Monad.Reader               (ask)
 import           Data.Proxy                         (Proxy (..))
 import           GHC.TypeLits                       (KnownNat, KnownSymbol,
                                                      natVal)
 import           Network.HTTP.Types.Status          (mkStatus)
 import           Network.Wai                        (Application, Response,
-                                                     responseLBS)
-
+                                                     requestMethod, responseLBS)
 
 data (path :: k) </> (a :: *)
+
 infixr 4 </>
 
 type Server api = HandlerT api Handler
@@ -38,22 +43,28 @@ class HasHandler layout args where
 
 -- | Implはレスポンスの実装についての型であり、
 --   Handlerの戻り値と関連付けるためのinstance
-instance {-# OVERLAPPABLE #-} (MimeEncode mediaType a, KnownMethod method, KnownNat status)
-  => HasHandler (Impl method status '[mediaType] a) args where
+instance
+  {-# OVERLAPPABLE #-}
+  (MimeEncode mediaType a, KnownMethod method, KnownNat status) =>
+  HasHandler (Impl method status '[mediaType] a) args
+  where
   type HandlerT (Impl method status '[mediaType] a) m = m a
 
-  route handler = earlyReturnRoute $ responseLBS status [] <$> body
-        where
-          body = mimeEncode @mediaType <$> runHandler handler
-          status = toEnum $ nat @status
+  route handler = do
+    req <- ask
+    if requestMethod req == method
+      then earlyReturnRoute $ responseLBS status [] <$> body
+      else accumFail $ badMethod $ methodStdVal @method
+    where
+      body = mimeEncode @mediaType <$> runHandler handler
+      status = toEnum $ nat @status
+      method = methodVal @method
 
-
-nat :: forall k . KnownNat k => Int
+nat :: forall k. KnownNat k => Int
 nat = fromInteger $ natVal (Proxy :: Proxy k)
 
-
 -- | 静的なパスの検証をして次に渡す
---instance (KnownSymbol path, HasHandler api context) => HasHandler (path </> api) context where
+-- instance (KnownSymbol path, HasHandler api context) => HasHandler (path </> api) context where
 --  type HandlerT (path </> api) m = HandlerT api m
 ----
 --  route Proxy context subserver =

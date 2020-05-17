@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Citrous.Unit.Impl
@@ -10,21 +10,13 @@ module Citrous.Unit.Impl
   )
 where
 
-import Data.Data (Proxy (..))
-import GHC.TypeLits (Nat)
-import Network.HTTP.Types.Method
-  ( Method,
-    StdMethod (..),
-    methodConnect,
-    methodDelete,
-    methodGet,
-    methodHead,
-    methodOptions,
-    methodPatch,
-    methodPost,
-    methodPut,
-    methodTrace,
-  )
+import           Data.Data                 (Proxy (..))
+import           GHC.TypeLits              (Nat)
+import           Network.HTTP.Types.Method (Method, StdMethod (..),
+                                            methodConnect, methodDelete,
+                                            methodGet, methodHead,
+                                            methodOptions, methodPatch,
+                                            methodPost, methodPut, methodTrace)
 
 data Impl (method :: k) (statusCode :: Nat) (mediaTypes :: [*]) (content :: *)
 
@@ -48,30 +40,41 @@ type Patch = Impl 'PATCH 200
 
 class KnownMethod a where
   methodVal :: Method
+  methodStdVal :: StdMethod
 
 instance KnownMethod 'GET where
   methodVal = methodGet
+  methodStdVal = GET
 
 instance KnownMethod 'POST where
   methodVal = methodPost
+  methodStdVal = POST
 
 instance KnownMethod 'PUT where
   methodVal = methodPut
+  methodStdVal = PUT
 
 instance KnownMethod 'DELETE where
   methodVal = methodDelete
+  methodStdVal = DELETE
 
 instance KnownMethod 'PATCH where
   methodVal = methodPatch
+  methodStdVal = PATCH
 
 instance KnownMethod 'HEAD where
   methodVal = methodHead
+  methodStdVal = HEAD
 
 instance KnownMethod 'OPTIONS where
   methodVal = methodOptions
+  methodStdVal = OPTIONS
 
 instance KnownMethod 'TRACE where
   methodVal = methodTrace
+  methodStdVal = TRACE
 
 instance KnownMethod 'CONNECT where
   methodVal = methodConnect
+  methodStdVal = CONNECT
+
