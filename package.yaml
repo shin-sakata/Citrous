@@ -27,12 +27,14 @@ dependencies:
   - http-media
   - aeson
   - utf8-conversions
+  - transformers
   - mtl
   - extensible
   - extensible-skeleton
   - membership
   - containers
   - bytestring
+
 
 library:
   source-dirs: src

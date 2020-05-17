@@ -5,7 +5,8 @@
 
 module Citrous.Unit.MediaTypes where
 
-import           Data.Aeson                     (ToJSON, eitherDecode, encode, FromJSON)
+import           Data.Aeson                     (FromJSON, ToJSON,
+                                                 eitherDecodeStrict, encode)
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (ByteString, LazyByteString,
                                                  LazyText, Text)
@@ -44,10 +45,10 @@ instance MimeEncode TextPlain String where
   mimeEncode = convert
 
 class Accept ctype => MimeDecode ctype a where
-  mimeDecode :: LazyByteString -> Either String a
+  mimeDecode :: ByteString -> Either String a
 
 instance FromJSON a => MimeDecode JSON a where
-  mimeDecode = eitherDecode
+  mimeDecode = eitherDecodeStrict
 
 instance MimeDecode TextPlain LazyText where
   mimeDecode = Right . convert

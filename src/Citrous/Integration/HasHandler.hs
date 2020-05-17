@@ -15,22 +15,27 @@ module Citrous.Integration.HasHandler where
 import           Citrous.Integration.Handler (Handler, runHandler)
 import           Citrous.Integration.Routes  (Routes, RoutingErr (..),
                                               badMethod, earlyReturnRoute)
+import           Citrous.Unit.Args
 import           Citrous.Unit.Impl           (Impl, KnownMethod, methodStdVal,
                                               methodVal)
-import           Citrous.Unit.MediaTypes     (MimeEncode, mimeEncode)
+import           Citrous.Unit.MediaTypes     (MimeDecode, MimeEncode,
+                                              mimeDecode, mimeEncode)
+import           Citrous.Unit.RequestBody    (ReqBody)
 import           Citrous.Unit.ServerErr      (ServerErr, err405)
 import           Control.Monad.Error.Class   (throwError)
-import           Control.Monad.Reader        (ask)
+import           Control.Monad.IO.Class      (liftIO)
+import           Control.Monad.Reader        (ask, asks)
 import           Control.Monad.Writer        (tell)
 import           Data.Proxy                  (Proxy (..))
 import           GHC.TypeLits                (KnownNat, KnownSymbol, natVal)
 import           Network.HTTP.Types.Status   (mkStatus)
 import           Network.Wai                 (Application, Response,
+                                              getRequestBodyChunk,
                                               requestMethod, responseLBS)
 
 data (path :: k) </> (a :: *)
-
 infixr 4 </>
+
 
 type Server api = HandlerT api Handler
 
@@ -38,6 +43,20 @@ type Server api = HandlerT api Handler
 class HasHandler layout args where
   type HandlerT layout (m :: * -> *) :: *
   route :: Server layout -> Routes
+
+data (path :: k) >>> (a :: *)
+infixr 3 >>>
+
+instance (MimeDecode mediaType a, HasHandler api args) =>
+  HasHandler (ReqBody '[mediaType] a >>> api ) args where
+  type HandlerT (ReqBody '[mediaType] a >>> api) m = a -> HandlerT api m
+  route handler = do
+    req <- ask
+    body <- liftIO $ getRequestBodyChunk req
+    case mimeDecode @mediaType @a body of
+      Right decodedBody -> route @api @args (handler decodedBody)
+      Left err          -> tell BadRequest
+
 
 -- | Implはレスポンスの実装についての型であり、
 --   Handlerの戻り値と関連付けるためのinstance

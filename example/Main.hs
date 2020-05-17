@@ -2,6 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators #-}
 
 module Main where
 
@@ -16,13 +17,17 @@ main = run 8080 $ runRoutes routes
 routes :: Routes
 routes = do
   route @(Get '[TextPlain] Text) rootHandler
-  route @(Post '[JSON] User) userHandler
+  -- ^ curl localhost:8080
+  -- >>> Hello Citrous!
+  route @(ReqBody '[JSON] User >>> Post '[JSON] User) userEchoHandler
+  -- ^ curl localhost:8080 -d '{ "age": 24, "name": "入田 関太郎" }'
+  -- >>> {"age":24,"name":"入田 関太郎"}
 
 rootHandler :: Handler Text
 rootHandler = return "Hello Citrous!"
 
-userHandler :: Handler User
-userHandler = return $ User 24 "入田 関太郎"
+userEchoHandler :: User -> Handler User
+userEchoHandler user = return user
 
 data User = User
     { age  :: Int
