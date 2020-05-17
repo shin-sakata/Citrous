@@ -14,8 +14,7 @@ module Citrous.Integration.HasHandler where
 
 import           Citrous.Integration.Handler (Handler, runHandler)
 import           Citrous.Integration.Routes  (Routes, RoutingErr (..),
-                                              accumFail, badMethod,
-                                              earlyReturnRoute)
+                                              badMethod, earlyReturnRoute)
 import           Citrous.Unit.Impl           (Impl, KnownMethod, methodStdVal,
                                               methodVal)
 import           Citrous.Unit.MediaTypes     (MimeEncode, mimeEncode)
