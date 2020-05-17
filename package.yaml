@@ -40,7 +40,7 @@ library:
 executables:
   citrous-sample-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         example
     ghc-options:
     - -threaded
     - -rtsopts
