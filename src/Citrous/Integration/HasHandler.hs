@@ -22,6 +22,7 @@ import           Citrous.Unit.MediaTypes     (MimeEncode, mimeEncode)
 import           Citrous.Unit.ServerErr      (ServerErr, err405)
 import           Control.Monad.Error.Class   (throwError)
 import           Control.Monad.Reader        (ask)
+import           Control.Monad.Writer        (tell)
 import           Data.Proxy                  (Proxy (..))
 import           GHC.TypeLits                (KnownNat, KnownSymbol, natVal)
 import           Network.HTTP.Types.Status   (mkStatus)
@@ -52,7 +53,7 @@ instance
     req <- ask
     if requestMethod req == method
       then earlyReturnRoute $ responseLBS status [] <$> body
-      else accumFail $ badMethod $ methodStdVal @method
+      else tell $ badMethod $ methodStdVal @method
     where
       body = mimeEncode @mediaType <$> runHandler handler
       status = toEnum $ nat @status

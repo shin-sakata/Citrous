@@ -22,26 +22,25 @@ import           Network.Wai.Internal           (Request)
 
 type Routes = Eff '[ReaderDef Request, EitherDef (IO Response), WriterDef RoutingErr] ()
 
+-- throwErrorを利用して最初にマッチしたRouteを返す。
 earlyReturnRoute :: IO Response -> Routes
 earlyReturnRoute = throwError
-
-accumFail :: RoutingErr -> Routes
-accumFail = tell
 
 runRoutes :: Routes -> Application
 runRoutes routes req send = send =<< case leaveEff $ runWriterDef $ runEitherDef $ runReaderDef routes req of
   (Left application, _) -> application
   (_, serverErr)        -> return $ responseRoutingErr serverErr
 
+-- Ordを導出している
+-- 比較して小さい方がエラーの優先度が高い
+-- methodNotAllowedの場合はAllowヘッダーを出力する為に可能なMethodを伝搬させる
 data RoutingErr = BadRequest
     | NotAcceptable
     | UnsupportedMediaType
     | Unauthorized
-    | MethodMotAllowed (Set StdMethod) -- Allowed methods
+    | MethodMotAllowed (Set StdMethod)
     | NotFound
     deriving (Show, Eq, Ord)
-
--- 比較して小さい方がエラーの優先度が高い
 
 toServerErr :: RoutingErr -> ServerErr
 toServerErr BadRequest           = err400
