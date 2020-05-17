@@ -12,23 +12,21 @@
 
 module Citrous.Integration.HasHandler where
 
-import           Citrous.Integration.Handler        (Handler, runHandler)
-import           Citrous.Integration.Routes         (Routes, RoutingErr (..),
-                                                     accumFail, badMethod,
-                                                     earlyReturnRoute)
-import           Citrous.Integration.RoutingRespond (RoutingRespond)
-import           Citrous.Unit.Impl                  (Impl, KnownMethod,
-                                                     methodStdVal, methodVal)
-import           Citrous.Unit.MediaTypes            (MimeEncode, mimeEncode)
-import           Citrous.Unit.ServerErr             (ServerErr, err405)
-import           Control.Monad.Error.Class          (throwError)
-import           Control.Monad.Reader               (ask)
-import           Data.Proxy                         (Proxy (..))
-import           GHC.TypeLits                       (KnownNat, KnownSymbol,
-                                                     natVal)
-import           Network.HTTP.Types.Status          (mkStatus)
-import           Network.Wai                        (Application, Response,
-                                                     requestMethod, responseLBS)
+import           Citrous.Integration.Handler (Handler, runHandler)
+import           Citrous.Integration.Routes  (Routes, RoutingErr (..),
+                                              accumFail, badMethod,
+                                              earlyReturnRoute)
+import           Citrous.Unit.Impl           (Impl, KnownMethod, methodStdVal,
+                                              methodVal)
+import           Citrous.Unit.MediaTypes     (MimeEncode, mimeEncode)
+import           Citrous.Unit.ServerErr      (ServerErr, err405)
+import           Control.Monad.Error.Class   (throwError)
+import           Control.Monad.Reader        (ask)
+import           Data.Proxy                  (Proxy (..))
+import           GHC.TypeLits                (KnownNat, KnownSymbol, natVal)
+import           Network.HTTP.Types.Status   (mkStatus)
+import           Network.Wai                 (Application, Response,
+                                              requestMethod, responseLBS)
 
 data (path :: k) </> (a :: *)
 
