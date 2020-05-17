@@ -1,26 +1,28 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications  #-}
 
 module Main where
 
-import           Citrous.Integration.HasHandler
 import           Citrous.Integration.Handler
+import           Citrous.Integration.HasHandler
+import           Citrous.Integration.Routes     (Routes, runRoutes)
 import           Citrous.Unit.Impl
 import           Citrous.Unit.MediaTypes
 import           Data.Convertible.Utf8.Internal
 import           Data.Functor.Identity          (Identity)
+import           Network.Wai.Handler.Warp       (run)
 
-type API = Get '[TextPlain] Text
-type NoEffHandler a = HandlerT a Identity
-
-minimalHandler :: NoEffHandler API
-minimalHandler = return "Hello Citrous!"
-
-{-|
 routes :: Routes
 routes = do
-  route @(Get '[TextPlain] Text) handler
--}
+  route @(Get '[TextPlain] Text) rootHandler
+  route @(Get '[TextPlain] String) htmlHandler
+
+rootHandler :: Handler Text
+rootHandler = return "Hello Citrous!"
+
+htmlHandler :: Handler String
+htmlHandler = return "<h1>String</h1>"
 
 main :: IO ()
-main = return ()
+main = run 8080 $ runRoutes routes

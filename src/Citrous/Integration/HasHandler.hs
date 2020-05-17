@@ -13,10 +13,10 @@
 module Citrous.Integration.HasHandler where
 
 import           Citrous.Integration.Handler        (Handler, runHandler)
+import           Citrous.Integration.Routes         (Routes, earlyReturnRoute)
 import           Citrous.Integration.RoutingRespond (RoutingRespond)
 import           Citrous.Unit.Impl                  (Impl, KnownMethod)
 import           Citrous.Unit.MediaTypes            (MimeEncode, mimeEncode)
-import           Citrous.Unit.RouteResult           (RouteResult (..))
 import           Citrous.Unit.ServerErr             (ServerErr)
 import           Data.Proxy                         (Proxy (..))
 import           GHC.TypeLits                       (KnownNat, KnownSymbol,
@@ -34,7 +34,7 @@ type Server api = HandlerT api Handler
 -- | Handlerと型レベルルーティングを関連付ける為のクラス
 class HasHandler layout args where
   type HandlerT layout (m :: * -> *) :: *
-  route :: Server layout -> RouteResult ServerErr Application
+  route :: Server layout -> Routes
 
 -- | Implはレスポンスの実装についての型であり、
 --   Handlerの戻り値と関連付けるためのinstance
@@ -42,11 +42,11 @@ instance {-# OVERLAPPABLE #-} (MimeEncode mediaType a, KnownMethod method, Known
   => HasHandler (Impl method status '[mediaType] a) args where
   type HandlerT (Impl method status '[mediaType] a) m = m a
 
-  route handler = Route (\req send -> send =<< do
-      content <- runHandler handler
-      let body = (mimeEncode @mediaType content)
-      return $ responseLBS (toEnum $ nat @status) [] body
-    )
+  route handler = earlyReturnRoute $ responseLBS status [] <$> body
+        where
+          body = mimeEncode @mediaType <$> runHandler handler
+          status = toEnum $ nat @status
+
 
 nat :: forall k . KnownNat k => Int
 nat = fromInteger $ natVal (Proxy :: Proxy k)
