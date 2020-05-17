@@ -3,7 +3,36 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: extensible
+    version: '0.8'
+    git: https://github.com/fumieval/extensible.git
+    pantry-tree:
+      size: 2910
+      sha256: 758a206fa321e569619add5eeae8d0e709afa858becb8038a7407ea2e4a461d8
+    commit: 853d36d17e1593f81139a9b21909041c23950029
+  original:
+    git: https://github.com/fumieval/extensible.git
+    commit: 853d36d17e1593f81139a9b21909041c23950029
+- completed:
+    name: membership
+    version: '0'
+    git: https://github.com/fumieval/membership.git
+    pantry-tree:
+      size: 505
+      sha256: 2203f0c12b3598cf05da1cf5c9b51206495696c34e1b068eb1b0d0b1d25bb835
+    commit: 344952e3b1f0f12c39cc2b0ace531cfc322a64d8
+  original:
+    git: https://github.com/fumieval/membership.git
+    commit: 344952e3b1f0f12c39cc2b0ace531cfc322a64d8
+- completed:
+    hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
+    pantry-tree:
+      size: 441
+      sha256: e7fd2d42784808415558f54c66450ae60d547c66b7c5349ddd942078a3c2bbae
+  original:
+    hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
 snapshots:
 - completed:
     size: 523554

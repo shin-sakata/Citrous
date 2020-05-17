@@ -27,7 +27,10 @@ dependencies:
   - http-media
   - aeson
   - utf8-conversions
-  - extensible-effects
+  - mtl
+  - extensible
+  - extensible-skeleton
+  - membership
 
 library:
   source-dirs: src

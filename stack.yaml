@@ -40,6 +40,11 @@ packages:
 #   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
 #
 extra-deps:
+- git: https://github.com/fumieval/extensible.git
+  commit: 853d36d17e1593f81139a9b21909041c23950029
+- git: https://github.com/fumieval/membership.git
+  commit : 344952e3b1f0f12c39cc2b0ace531cfc322a64d8
+- extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
