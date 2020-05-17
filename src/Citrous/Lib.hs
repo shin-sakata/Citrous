@@ -12,7 +12,6 @@
 module Citrous.Lib where
 
 import           Citrous.Unit.Capture
-import           Citrous.Unit.Content           (Context)
 import           Citrous.Unit.Impl
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (Text)

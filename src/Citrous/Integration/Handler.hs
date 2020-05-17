@@ -12,5 +12,5 @@ import           Data.Data                 (Proxy (..))
 import           Data.Functor.Identity     (Identity, runIdentity)
 import           GHC.Generics              (Generic)
 
-newtype Handler a = Handler { runHandler' :: IO a }
+newtype Handler a = Handler { runHandler :: IO a }
   deriving (Functor, Applicative, Monad, MonadIO)
