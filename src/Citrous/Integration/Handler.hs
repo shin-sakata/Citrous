@@ -27,7 +27,7 @@ instance Monad Handler where
   (Handler x) >>= f = f x
 
 instance Handler' Handler where
-  runHandler' = runHandler'
+  runHandler' (Handler x) = x
 
 instance Handler' Identity where
   runHandler' = runIdentity

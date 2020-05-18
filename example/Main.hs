@@ -17,20 +17,25 @@ main = run 8080 $ runRoutes routes
 
 routes :: Routes
 routes = do
-  route @(Get '[TextPlain] Text) rootHandler
+  route @(Get '[TextPlain] String) rootHandler
   -- ^ curl localhost:8080
   -- >>> Hello Citrous!
-  route @(ReqBody '[JSON] User >>> Post '[JSON] User) userEchoHandler
-  -- ^ curl localhost:8080 -d '{ "age": 24, "name": "入田 関太郎" }'
+  route @("hello" </> Get '[TextPlain] String) helloHandler
+  -- ^ curl localhost:8080/hello
+  -- >>> Hello Handler!
+  route @("user" </> "echo" </> ReqBody '[JSON] User >>> Post '[JSON] User) userEchoHandler
+  -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
   -- >>> {"age":24,"name":"入田 関太郎"}
 
-rootHandler :: Handler Text
+rootHandler :: Handler String
 rootHandler = return "Hello Citrous!"
 
-type MinimumEffHandler = Identity
+helloHandler :: Handler String
+helloHandler = return "Hello Handler!"
 
+type MinimumEffHandler = Identity
 userEchoHandler :: User -> MinimumEffHandler User
-userEchoHandler user = return user
+userEchoHandler = return
 
 data User = User
     { age  :: Int
