@@ -26,6 +26,9 @@ routes = do
   route @("user" </> "echo" </> ReqBody '[JSON] User >>> Post '[JSON] User) userEchoHandler
   -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
   -- >>> {"age":24,"name":"入田 関太郎"}
+  route @(Capture "age" Int </> Capture "name" Text </> Get '[JSON] User) createUserHandler
+  -- ^ curl localhost:8080/24/orange
+  -- >>> {"age":24,"name":"orange"}
 
 rootHandler :: Handler String
 rootHandler = return "Hello Citrous!"
@@ -36,6 +39,9 @@ helloHandler = return "Hello Handler!"
 type MinimumEffHandler = Identity
 userEchoHandler :: User -> MinimumEffHandler User
 userEchoHandler = return
+
+createUserHandler :: Int -> Text -> Handler User
+createUserHandler age name = return $ User { age = age, name = name }
 
 data User = User
     { age  :: Int

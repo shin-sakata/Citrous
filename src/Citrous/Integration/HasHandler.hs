@@ -16,6 +16,7 @@ import           Citrous.Integration.Handler    (Handler, Handler', runHandler,
 import           Citrous.Integration.Routes     (Routes, RoutingErr (..),
                                                  badMethod, earlyReturnRoute)
 import           Citrous.Unit.Args
+import           Citrous.Unit.Capture           (Capture, FromPath, fromPath)
 import           Citrous.Unit.Impl              (Impl, KnownMethod,
                                                  methodStdVal, methodVal)
 import           Citrous.Unit.MediaTypes        (MimeDecode, MimeEncode,
@@ -37,7 +38,6 @@ import           Network.Wai                    (Application, Request, Response,
                                                  getRequestBodyChunk, pathInfo,
                                                  requestMethod, responseLBS)
 
-
 data (path :: k) </> (a :: *)
 
 infixr 4 </>
@@ -51,32 +51,49 @@ data (path :: k) >>> (a :: *)
 
 infixr 4 >>>
 
--- | ReqBodyをdecodeしてHandlerに渡す
+-- | Pathをキャプチャしてhandlerに渡す
 instance
-  (MimeDecode mediaType a, HasHandler layout h, Handler' h) =>
-  HasHandler (ReqBody '[mediaType] a >>> layout) h
+  (KnownSymbol pathName, HasHandler next h, FromPath arg) =>
+  HasHandler (Capture pathName arg </> next) h
   where
-  type HandlerT (ReqBody '[mediaType] a >>> layout) h = a -> HandlerT layout h
+  type HandlerT (Capture pathName arg </> next) h = arg -> HandlerT next h
+
   route handler = do
-    req <- ask
-    body <- liftIO $ getRequestBodyChunk req
-    case mimeDecode @mediaType @a body of
-      Right decodedBody -> route @layout @h (handler decodedBody)
-      Left err          -> tell BadRequest
+    path <- asks pathInfo
+    if null path
+      then tell NotFound
+      else
+        ( case fromPath @arg $ head path of
+            Just arg -> local tailPathInfo $ route @next @h (handler arg)
+            Nothing  -> tell NotFound
+        )
 
 -- | 静的な文字列のパスを分解する
-instance (KnownSymbol path, HasHandler layout h) => HasHandler (path </> layout) h where
-  type HandlerT (path </> layout) h = HandlerT layout h
+instance (KnownSymbol path, HasHandler next h) => HasHandler (path </> next) h where
+  type HandlerT (path </> next) h = HandlerT next h
 
   route handler = do
     path <- asks pathInfo
     if not (null path) && (head path == symbol @path)
-      then local tailPathInfo $ route @layout @h handler
+      then local tailPathInfo $ route @next @h handler
       else tell NotFound
 
 -- | unsafe
 tailPathInfo :: Request -> Request
-tailPathInfo req = req { pathInfo = tail $ pathInfo req }
+tailPathInfo req = req {pathInfo = tail $ pathInfo req}
+
+-- | ReqBodyをdecodeしてHandlerに渡す
+instance
+  (MimeDecode mediaType a, HasHandler next h, Handler' h) =>
+  HasHandler (ReqBody '[mediaType] a >>> next) h
+  where
+  type HandlerT (ReqBody '[mediaType] a >>> next) h = a -> HandlerT next h
+  route handler = do
+    req <- ask
+    body <- liftIO $ getRequestBodyChunk req
+    case mimeDecode @mediaType @a body of
+      Right decodedBody -> route @next @h (handler decodedBody)
+      Left err          -> tell BadRequest
 
 -- | Implはレスポンスの実装についての型であり、
 --   Handlerの戻り値と関連付けるためのinstance
