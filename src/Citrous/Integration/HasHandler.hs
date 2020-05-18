@@ -40,21 +40,21 @@ infixr 4 </>
 type Server api = HandlerT api Handler
 
 -- | Handlerと型レベルルーティングを関連付ける為のクラス
-class HasHandler layout args where
+class HasHandler layout where
   type HandlerT layout (m :: * -> *) :: *
   route :: Server layout -> Routes
 
 data (path :: k) >>> (a :: *)
 infixr 3 >>>
 
-instance (MimeDecode mediaType a, HasHandler api args) =>
-  HasHandler (ReqBody '[mediaType] a >>> api ) args where
-  type HandlerT (ReqBody '[mediaType] a >>> api) m = a -> HandlerT api m
+instance (MimeDecode mediaType a, HasHandler layout) =>
+  HasHandler (ReqBody '[mediaType] a >>> layout ) where
+  type HandlerT (ReqBody '[mediaType] a >>> layout) m = a -> HandlerT layout m
   route handler = do
     req <- ask
     body <- liftIO $ getRequestBodyChunk req
     case mimeDecode @mediaType @a body of
-      Right decodedBody -> route @api @args (handler decodedBody)
+      Right decodedBody -> route @layout (handler decodedBody)
       Left err          -> tell BadRequest
 
 
@@ -63,7 +63,7 @@ instance (MimeDecode mediaType a, HasHandler api args) =>
 instance
   {-# OVERLAPPABLE #-}
   (MimeEncode mediaType a, KnownMethod method, KnownNat status) =>
-  HasHandler (Impl method status '[mediaType] a) args
+  HasHandler (Impl method status '[mediaType] a)
   where
   type HandlerT (Impl method status '[mediaType] a) m = m a
 
