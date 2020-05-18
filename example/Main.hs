@@ -2,11 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeApplications  #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeOperators     #-}
 
 module Main where
 
 import           Citrous.API
+import           Control.Monad.Identity         (Identity)
 import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Data.Convertible.Utf8.Internal
 import           Network.Wai.Handler.Warp       (run)
@@ -26,7 +27,9 @@ routes = do
 rootHandler :: Handler Text
 rootHandler = return "Hello Citrous!"
 
-userEchoHandler :: User -> Handler User
+type MinimumEffHandler = Identity
+
+userEchoHandler :: User -> MinimumEffHandler User
 userEchoHandler user = return user
 
 data User = User

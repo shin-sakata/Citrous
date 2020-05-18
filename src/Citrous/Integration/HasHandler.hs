@@ -12,7 +12,8 @@
 
 module Citrous.Integration.HasHandler where
 
-import           Citrous.Integration.Handler (Handler, runHandler)
+import           Citrous.Integration.Handler (Handler, Handler', runHandler,
+                                              runHandler')
 import           Citrous.Integration.Routes  (Routes, RoutingErr (..),
                                               badMethod, earlyReturnRoute)
 import           Citrous.Unit.Args
@@ -37,24 +38,22 @@ data (path :: k) </> (a :: *)
 infixr 4 </>
 
 
-type Server api = HandlerT api Handler
-
 -- | Handlerと型レベルルーティングを関連付ける為のクラス
-class HasHandler layout where
-  type HandlerT layout (m :: * -> *) :: *
-  route :: Server layout -> Routes
+class HasHandler layout h where
+  type HandlerT layout (h :: * -> *) :: *
+  route :: HandlerT layout h -> Routes
 
 data (path :: k) >>> (a :: *)
 infixr 3 >>>
 
-instance (MimeDecode mediaType a, HasHandler layout) =>
-  HasHandler (ReqBody '[mediaType] a >>> layout ) where
-  type HandlerT (ReqBody '[mediaType] a >>> layout) m = a -> HandlerT layout m
+instance (MimeDecode mediaType a, HasHandler layout h, Handler' h) =>
+  HasHandler (ReqBody '[mediaType] a >>> layout ) h where
+  type HandlerT (ReqBody '[mediaType] a >>> layout) h = a -> HandlerT layout h
   route handler = do
     req <- ask
     body <- liftIO $ getRequestBodyChunk req
     case mimeDecode @mediaType @a body of
-      Right decodedBody -> route @layout (handler decodedBody)
+      Right decodedBody -> route @layout @h (handler decodedBody)
       Left err          -> tell BadRequest
 
 
@@ -62,10 +61,10 @@ instance (MimeDecode mediaType a, HasHandler layout) =>
 --   Handlerの戻り値と関連付けるためのinstance
 instance
   {-# OVERLAPPABLE #-}
-  (MimeEncode mediaType a, KnownMethod method, KnownNat status) =>
-  HasHandler (Impl method status '[mediaType] a)
+  (MimeEncode mediaType a, KnownMethod method, KnownNat status, Handler' h) =>
+  HasHandler (Impl method status '[mediaType] a) h
   where
-  type HandlerT (Impl method status '[mediaType] a) m = m a
+  type HandlerT (Impl method status '[mediaType] a) h = h a
 
   route handler = do
     req <- ask
@@ -73,7 +72,7 @@ instance
       then earlyReturnRoute $ responseLBS status [] <$> body
       else tell $ badMethod $ methodStdVal @method
     where
-      body = mimeEncode @mediaType <$> runHandler handler
+      body = return $ mimeEncode @mediaType $ runHandler' handler
       status = toEnum $ nat @status
       method = methodVal @method
 
