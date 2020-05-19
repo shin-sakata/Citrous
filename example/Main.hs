@@ -7,21 +7,12 @@
 module Main where
 
 import           Citrous.API
-import           Control.Monad.Identity         (Identity)
 import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Data.Convertible.Utf8.Internal
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
 main = run 8080 $ runRoutes routes
-
-
-{- |
-理想型
-routes :: Routes
-routes = do
-  route @( "foo" >: Capture "bar" Int :<?> "buz" :<&> "qux" :<> ReqBody
--}
 
 routes :: Routes
 routes = do
@@ -30,6 +21,9 @@ routes = do
   -- >>> Hello Citrous!
   route @("hello" :> Get '[TextPlain] String) helloHandler
   -- ^ curl localhost:8080/hello
+  -- >>> Hello Handler!
+  route @("query" :> QueryParam "hogehoge" Int :> Get '[TextPlain] String) queryHandler
+  -- ^ curl localhost:8080/query
   -- >>> Hello Handler!
   route @("user" :> "echo" :> ReqBody '[JSON] User :> Post '[JSON] User) userEchoHandler
   -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
@@ -44,8 +38,10 @@ rootHandler = return "Hello Citrous!"
 helloHandler :: Handler String
 helloHandler = return "Hello Handler!"
 
-type MinimumEffHandler = Identity
-userEchoHandler :: User -> MinimumEffHandler User
+queryHandler :: Int -> Handler String
+queryHandler i = return $ show i
+
+userEchoHandler :: User -> Handler User
 userEchoHandler = return
 
 createUserHandler :: Int -> Text -> Handler User

@@ -6,65 +6,174 @@
 
 ## Examples
 
-### text/plain
+### Hello Citrous!
 
 |HTTP-Method|URL|Response|
 |---|---|---|
-|GET|localhost:8080|Hello Citrous!!|
-|GET|localhost:8080/yourName  |Hello YourName!!|
+|GET|localhost:8080|Hello Citrous!|
 
 ```haskell
-import Citrous.API
-import Data.Text (Text)
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators     #-}
+
+module Main where
+
+import           Citrous.API
+import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = runCitrous 8080 routes
+main = run 8080 $ runRoutes routes
 
-routes :: Routes Handler
+routes :: Routes
 routes = do
-  get (match "/") topAction
-  get (match "/hello" </> text) helloAction
-  absolute notFound
+  route @(Get '[TextPlain] String) rootHandler
 
-topAction :: Handler
-topAction = textPlain "Hello Citrous!!"
-
-helloAction :: Text -> Handler
-helloAction name = textPlain ("Hello " <> name <> "!!")
-
-notFound :: Handler
-notFound = throwErr err404
+rootHandler :: Handler String
+rootHandler = return "Hello Citrous!"
 ```
 
-### application/json
+## Routing
 
-|HTTP-Method|Entry point|Response|
+### Static path
+
+|HTTP-Method|URL|Response|
 |---|---|---|
-|GET|localhost:8080/echoUser/33/Orange|`{"age":33,"name":"Orange"}`|
-|GET|localhost:8080/echoUser/24/Lemon|`{"age":24,"name":"Lemon"}`|
+|GET|localhost:8080|Hello Citrous!|
+|GET|localhost:8080/hello|Hello Handler!|
+|GET|localhost:8080/hello/world|Hello World!|
 
 ```haskell
-import Citrous.API
-import Data.Text (Text)
-import GHC.Generics (Generic)
-import Data.Aeson (FromJSON, ToJSON)
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators     #-}
+
+module Main where
+
+import           Citrous.API
+import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = runCitrous 8080 routes
+main = run 8080 $ runRoutes routes
 
-routes :: Routes Handler
+routes :: Routes
 routes = do
-  get (match "/echoUser" </> int </> text) echoUserAction
+  route @(Get '[TextPlain] String) rootHandler
+  route @("hello" :> Get '[TextPlain] String) helloHandler
+  route @("hello" :> "world" :> Get '[TextPlain] String) helloWorldHandler
 
-echoUserAction :: Int -> Text -> Handler
-echoUserAction age name = json $ User age name
+rootHandler :: Handler String
+rootHandler = return "Hello Citrous!"
 
-data User =
-  User
+helloHandler :: Handler String
+helloHandler = return "Hello Handler!"
+
+helloWorldHandler :: Handler String
+helloWorldHandler = return "Hello World!"
+```
+
+### Extracting Query Params and Paths
+
+|HTTP-Method|URL|Response|
+|---|---|---|
+|GET|localhost:8080/query?id=100|100|
+|GET|localhost:8080/114514|114514|
+
+```haskell
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators     #-}
+
+module Main where
+
+import           Citrous.API
+import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
+import           Data.Convertible.Utf8.Internal
+import           Network.Wai.Handler.Warp       (run)
+
+main :: IO ()
+main = run 8080 $ runRoutes routes
+
+routes :: Routes
+routes = do
+  route @("query" :> QueryParam "id" Int :> Get '[TextPlain] String) queryHandler
+  route @(Capture "id" Int :> Get '[JSON] User) pathHandler
+
+queryHandler :: Int -> Handler String
+queryHandler id = return $ show id
+
+pathHandler :: Int -> Handler String
+pathHandler id = return $ show id
+```
+
+### JSON
+
+|HTTP-Method|URL|Response|
+|---|---|---|
+|GET|localhost:8080/24/orange|{"age":24,"name":"orange"}|
+
+```haskell
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators     #-}
+
+module Main where
+
+import           Citrous.API
+import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
+import           Network.Wai.Handler.Warp       (run)
+
+main :: IO ()
+main = run 8080 $ runRoutes routes
+
+routes :: Routes
+routes = do
+  route @(Capture "age" Int :> Capture "name" String :> Get '[JSON] User) userHandler
+
+userHandler :: Int -> String -> Handler User
+userHandler age name = return $ User { age = age, name = name }
+
+data User = User
     { age  :: Int
-    , name :: Text
+    , name :: String
     }
-  deriving (Generic, Show)
-instance ToJSON User
-instance FromJSON User
+$(deriveJSON defaultOptions 'User)
+```
+
+### Decode the request body
+
+|HTTP-Method|URL|BODY|Response|
+|---|---|---|---|
+|POST|localhost:8080/user|{"age":24,"name":"orange"}|"24才 orange"|
+
+```haskell
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TypeApplications  #-}
+{-# LANGUAGE TypeOperators     #-}
+
+module Main where
+
+import           Citrous.API
+import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
+import           Network.Wai.Handler.Warp       (run)
+
+main :: IO ()
+main = run 8080 $ runRoutes routes
+
+routes :: Routes
+routes = do
+  route @("user" :> ReqBody '[JSON] User :> Post '[PlainText] String) userEchoHandler
+
+userEchoHandler :: User -> Handler String
+userEchoHandler user = (show $ age user) ++ "才 " ++ (name user)
+
+data User = User
+    { age  :: Int
+    , name :: String
+    }
+$(deriveJSON defaultOptions 'User)
 ```

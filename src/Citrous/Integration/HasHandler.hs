@@ -16,13 +16,16 @@ import           Citrous.Integration.Handler    (Handler, Handler', runHandler,
 import           Citrous.Integration.Routes     (Routes, RoutingErr (..),
                                                  badMethod, earlyReturnRoute)
 import           Citrous.Unit.Args
-import           Citrous.Unit.Capture           (Capture, FromPath, fromPath)
+import           Citrous.Unit.Capture           (Capture)
+import           Citrous.Unit.Extractor         (Extractor, extract)
 import           Citrous.Unit.Impl              (Impl, KnownMethod,
                                                  methodStdVal, methodVal)
 import           Citrous.Unit.MediaTypes        (MimeDecode, MimeEncode,
                                                  mimeDecode, mimeEncode)
+import           Citrous.Unit.QueryParam        (QueryParam)
 import           Citrous.Unit.RequestBody       (ReqBody)
 import           Citrous.Unit.ServerErr         (ServerErr, err405)
+import           Control.Monad                  (join)
 import           Control.Monad.Error.Class      (throwError)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Reader           (ask, asks, local)
@@ -36,7 +39,8 @@ import           GHC.TypeLits                   (KnownNat, KnownSymbol, natVal,
 import           Network.HTTP.Types.Status      (mkStatus)
 import           Network.Wai                    (Application, Request, Response,
                                                  getRequestBodyChunk, pathInfo,
-                                                 requestMethod, responseLBS)
+                                                 queryString, requestMethod,
+                                                 responseLBS)
 
 data (path :: k) :> (a :: *)
 
@@ -47,9 +51,23 @@ class HasHandler layout h where
   type HandlerT layout (h :: * -> *) :: *
   route :: HandlerT layout h -> Routes
 
+-- | query paramをキャプチャ
+instance
+  (KnownSymbol queryName, HasHandler next h, Extractor arg) =>
+  HasHandler (QueryParam queryName arg :> next) h
+  where
+  type HandlerT (QueryParam queryName arg :> next) h = arg -> HandlerT next h
+
+  route handler = do
+    query <- asks queryString
+    let maybeParam = join $ lookup (convert $ symbol @queryName) query
+    case join $ extract @arg <$> maybeParam of
+      Nothing -> tell NotFound
+      Just a  -> route @next @h (handler a)
+
 -- | Pathをキャプチャしてhandlerに渡す
 instance
-  (KnownSymbol pathName, HasHandler next h, FromPath arg) =>
+  (KnownSymbol pathName, HasHandler next h, Extractor arg) =>
   HasHandler (Capture pathName arg :> next) h
   where
   type HandlerT (Capture pathName arg :> next) h = arg -> HandlerT next h
@@ -59,7 +77,7 @@ instance
     if null path
       then tell NotFound
       else
-        ( case fromPath @arg $ head path of
+        ( case extract @arg $ convert $ head path of
             Just arg -> local tailPathInfo $ route @next @h (handler arg)
             Nothing  -> tell NotFound
         )
