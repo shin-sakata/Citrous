@@ -15,18 +15,26 @@ import           Network.Wai.Handler.Warp       (run)
 main :: IO ()
 main = run 8080 $ runRoutes routes
 
+
+{- |
+理想型
+routes :: Routes
+routes = do
+  route @( "foo" >: Capture "bar" Int :<?> "buz" :<&> "qux" :<> ReqBody
+-}
+
 routes :: Routes
 routes = do
   route @(Get '[TextPlain] String) rootHandler
   -- ^ curl localhost:8080
   -- >>> Hello Citrous!
-  route @("hello" </> Get '[TextPlain] String) helloHandler
+  route @("hello" :> Get '[TextPlain] String) helloHandler
   -- ^ curl localhost:8080/hello
   -- >>> Hello Handler!
-  route @("user" </> "echo" </> ReqBody '[JSON] User >>> Post '[JSON] User) userEchoHandler
+  route @("user" :> "echo" :> ReqBody '[JSON] User :> Post '[JSON] User) userEchoHandler
   -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
   -- >>> {"age":24,"name":"入田 関太郎"}
-  route @(Capture "age" Int </> Capture "name" Text </> Get '[JSON] User) createUserHandler
+  route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
   -- ^ curl localhost:8080/24/orange
   -- >>> {"age":24,"name":"orange"}
 

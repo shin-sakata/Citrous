@@ -38,25 +38,21 @@ import           Network.Wai                    (Application, Request, Response,
                                                  getRequestBodyChunk, pathInfo,
                                                  requestMethod, responseLBS)
 
-data (path :: k) </> (a :: *)
+data (path :: k) :> (a :: *)
 
-infixr 4 </>
+infixr 4 :>
 
 -- | Handlerと型レベルルーティングを関連付ける為のクラス
 class HasHandler layout h where
   type HandlerT layout (h :: * -> *) :: *
   route :: HandlerT layout h -> Routes
 
-data (path :: k) >>> (a :: *)
-
-infixr 4 >>>
-
 -- | Pathをキャプチャしてhandlerに渡す
 instance
   (KnownSymbol pathName, HasHandler next h, FromPath arg) =>
-  HasHandler (Capture pathName arg </> next) h
+  HasHandler (Capture pathName arg :> next) h
   where
-  type HandlerT (Capture pathName arg </> next) h = arg -> HandlerT next h
+  type HandlerT (Capture pathName arg :> next) h = arg -> HandlerT next h
 
   route handler = do
     path <- asks pathInfo
@@ -69,8 +65,8 @@ instance
         )
 
 -- | 静的な文字列のパスを分解する
-instance (KnownSymbol path, HasHandler next h) => HasHandler (path </> next) h where
-  type HandlerT (path </> next) h = HandlerT next h
+instance (KnownSymbol path, HasHandler next h) => HasHandler (path :> next) h where
+  type HandlerT (path :> next) h = HandlerT next h
 
   route handler = do
     path <- asks pathInfo
@@ -85,9 +81,9 @@ tailPathInfo req = req {pathInfo = tail $ pathInfo req}
 -- | ReqBodyをdecodeしてHandlerに渡す
 instance
   (MimeDecode mediaType a, HasHandler next h, Handler' h) =>
-  HasHandler (ReqBody '[mediaType] a >>> next) h
+  HasHandler (ReqBody '[mediaType] a :> next) h
   where
-  type HandlerT (ReqBody '[mediaType] a >>> next) h = a -> HandlerT next h
+  type HandlerT (ReqBody '[mediaType] a :> next) h = a -> HandlerT next h
   route handler = do
     req <- ask
     body <- liftIO $ getRequestBodyChunk req
