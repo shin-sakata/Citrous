@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators     #-}
 
-module Citrous.Integration.Routes where
+module Citrous.Integration.Router where
 
 import           Citrous.Unit.ServerErr         (ServerErr, err400, err401,
                                                  err404, err405, err406, err415,
@@ -22,14 +22,14 @@ import           Network.HTTP.Types.Method      (StdMethod (..),
 import           Network.Wai                    (Application, Response)
 import           Network.Wai.Internal           (Request)
 
-type Routes = Eff '[ReaderDef Request, EitherDef (IO Response), WriterDef RoutingErr, "IO" >: IO] ()
+type Router = Eff '[ReaderDef Request, EitherDef (IO Response), WriterDef RoutingErr, "IO" >: IO] ()
 
 -- throwErrorを利用して最初にマッチしたRouteを返す。
-earlyReturnRoute :: IO Response -> Routes
+earlyReturnRoute :: IO Response -> Router
 earlyReturnRoute = throwError
 
-runRoutes :: Routes -> Application
-runRoutes routes req send = send =<< do
+runRouter :: Router -> Application
+runRouter routes req send = send =<< do
   result <- retractEff $ runWriterDef $ runEitherDef $ runReaderDef routes req
   case result of
     (Left application, _) -> application

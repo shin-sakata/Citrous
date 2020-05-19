@@ -1,7 +1,7 @@
 module Citrous.API
   ( module Citrous.Integration.HasHandler,
     module Citrous.Integration.Handler,
-    module Citrous.Integration.Routes,
+    module Citrous.Integration.Router,
     module Citrous.Unit.Capture,
     module Citrous.Unit.Impl,
     module Citrous.Unit.MediaTypes,
@@ -14,7 +14,7 @@ where
 
 import Citrous.Integration.Handler
 import Citrous.Integration.HasHandler
-import Citrous.Integration.Routes
+import Citrous.Integration.Router
 import Citrous.Unit.Capture
 import Citrous.Unit.Extractor
 import Citrous.Unit.Impl

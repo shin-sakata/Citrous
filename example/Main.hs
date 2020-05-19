@@ -12,10 +12,10 @@ import           Data.Convertible.Utf8.Internal
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @(Get '[TextPlain] String) rootHandler
   -- ^ curl localhost:8080
   -- >>> Hello Citrous!

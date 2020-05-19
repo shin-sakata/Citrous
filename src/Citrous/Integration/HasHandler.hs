@@ -13,7 +13,7 @@ module Citrous.Integration.HasHandler where
 
 import           Citrous.Integration.Handler    (Handler, Handler', runHandler,
                                                  runHandler')
-import           Citrous.Integration.Routes     (Routes, RoutingErr (..),
+import           Citrous.Integration.Router     (Router, RoutingErr (..),
                                                  badMethod, earlyReturnRoute)
 import           Citrous.Unit.Args
 import           Citrous.Unit.Capture           (Capture)
@@ -49,7 +49,7 @@ infixr 4 :>
 -- | Handlerと型レベルルーティングを関連付ける為のクラス
 class HasHandler layout h where
   type HandlerT layout (h :: * -> *) :: *
-  route :: HandlerT layout h -> Routes
+  route :: HandlerT layout h -> Router
 
 -- | query paramをキャプチャ
 instance

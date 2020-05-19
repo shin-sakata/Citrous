@@ -23,10 +23,10 @@ import           Citrous.API
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @(Get '[TextPlain] String) rootHandler
 
 rootHandler :: Handler String
@@ -54,10 +54,10 @@ import           Citrous.API
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @(Get '[TextPlain] String) rootHandler
   route @("hello" :> Get '[TextPlain] String) helloHandler
   route @("hello" :> "world" :> Get '[TextPlain] String) helloWorldHandler
@@ -92,10 +92,10 @@ import           Data.Convertible.Utf8.Internal
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @("query" :> QueryParam "id" Int :> Get '[TextPlain] String) queryHandler
   route @(Capture "id" Int :> Get '[JSON] User) pathHandler
 
@@ -126,10 +126,10 @@ import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @(Capture "age" Int :> Capture "name" String :> Get '[JSON] User) userHandler
 
 userHandler :: Int -> String -> Handler User
@@ -162,10 +162,10 @@ import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRoutes routes
+main = run 8080 $ runRouter router
 
-routes :: Routes
-routes = do
+router :: Router
+router = do
   route @("user" :> ReqBody '[JSON] User :> Post '[PlainText] String) userEchoHandler
 
 userEchoHandler :: User -> Handler String
