@@ -24,59 +24,17 @@ dependencies:
   - wai
   - warp
   - http-types
+  - http-media
   - aeson
-  - network
-  - vault
-  - text
-  - attoparsec
-  - mtl
+  - utf8-conversions
   - transformers
-  - bytestring
-  - utf8-string
-  - exceptions
+  - mtl
   - extensible
   - extensible-skeleton
   - membership
-  - utf8-conversions
+  - containers
+  - bytestring
 
-default-extensions:
-  - BangPatterns
-  - BinaryLiterals
-  - ConstraintKinds
-  - DataKinds
-  - DefaultSignatures
-  - DeriveDataTypeable
-  - DeriveFoldable
-  - DeriveFunctor
-  - DeriveGeneric
-  - DeriveTraversable
-  - DoAndIfThenElse
-  - EmptyDataDecls
-  - ExistentialQuantification
-  - FlexibleContexts
-  - FlexibleInstances
-  - FunctionalDependencies
-  - GADTs
-  - GeneralizedNewtypeDeriving
-  - InstanceSigs
-  - KindSignatures
-  - LambdaCase
-  - MultiParamTypeClasses
-  - MultiWayIf
-  - NamedFieldPuns
-  - OverloadedStrings
-  - PartialTypeSignatures
-  - PatternGuards
-  - PolyKinds
-  - RankNTypes
-  - RecordWildCards
-  - ScopedTypeVariables
-  - StandaloneDeriving
-  - TupleSections
-  - TypeFamilies
-  - TypeOperators
-  - TypeSynonymInstances
-  - ViewPatterns
 
 library:
   source-dirs: src
@@ -84,7 +42,7 @@ library:
 executables:
   citrous-sample-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         example
     ghc-options:
     - -threaded
     - -rtsopts

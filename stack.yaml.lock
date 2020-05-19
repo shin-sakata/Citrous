@@ -5,19 +5,27 @@
 
 packages:
 - completed:
-    hackage: extensible-0.8@sha256:45ca089909ae434329e4d05dc557be94ff04f24c43ff9b915bd90c0599c83211,2911
+    name: extensible
+    version: '0.8'
+    git: https://github.com/fumieval/extensible.git
     pantry-tree:
-      size: 2097
-      sha256: d602c9d623afd9186a4d55898ef97f0dfb7f81ffbd5bae86e2238b3694d702fb
+      size: 2910
+      sha256: 758a206fa321e569619add5eeae8d0e709afa858becb8038a7407ea2e4a461d8
+    commit: 853d36d17e1593f81139a9b21909041c23950029
   original:
-    hackage: extensible-0.8@sha256:45ca089909ae434329e4d05dc557be94ff04f24c43ff9b915bd90c0599c83211,2911
+    git: https://github.com/fumieval/extensible.git
+    commit: 853d36d17e1593f81139a9b21909041c23950029
 - completed:
-    hackage: membership-0@sha256:3a11d8fd53cb1a76bb9273e6c929bbf9d649f109714bf487abb3143be04ddc81,995
+    name: membership
+    version: '0'
+    git: https://github.com/fumieval/membership.git
     pantry-tree:
-      size: 408
-      sha256: 3b593e0d14e848e318e745555776ebb25210e5e3dec4fde5d3c08ab51ceddc62
+      size: 505
+      sha256: 2203f0c12b3598cf05da1cf5c9b51206495696c34e1b068eb1b0d0b1d25bb835
+    commit: 344952e3b1f0f12c39cc2b0ace531cfc322a64d8
   original:
-    hackage: membership-0@sha256:3a11d8fd53cb1a76bb9273e6c929bbf9d649f109714bf487abb3143be04ddc81,995
+    git: https://github.com/fumieval/membership.git
+    commit: 344952e3b1f0f12c39cc2b0ace531cfc322a64d8
 - completed:
     hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
     pantry-tree:
@@ -25,20 +33,9 @@ packages:
       sha256: e7fd2d42784808415558f54c66450ae60d547c66b7c5349ddd942078a3c2bbae
   original:
     hackage: extensible-skeleton-0@sha256:58473b1dbed6fe4dea07bff27d8e899404c03ddbcdd8ce338cf92c29d39871a2,1446
-- completed:
-    name: utf8-conversions
-    version: 0.1.0.4
-    git: https://github.com/chemirea/utf8-conversions.git
-    pantry-tree:
-      size: 793
-      sha256: 4a04e78de74906057a8ee2b941e7954f321f54ef40e8daabdd1e67606bd86873
-    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
-  original:
-    git: https://github.com/chemirea/utf8-conversions.git
-    commit: 12f16143ea413fae25788fa3f8856d44cb9dfc56
 snapshots:
 - completed:
-    size: 491387
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/15/6.yaml
-    sha256: 8d81505a6de861e167a58534ab62330afb75bfa108735c7db1204f7ef2a39d79
-  original: lts-15.6
+    size: 523554
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2020/5/13.yaml
+    sha256: ffe47c9198473867fe21f634bae6c5fdfa437bf2ac1daa2c2023cf54de7305f9
+  original: nightly-2020-05-13
