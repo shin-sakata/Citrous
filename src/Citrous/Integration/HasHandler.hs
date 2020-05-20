@@ -62,7 +62,7 @@ instance
     query <- asks queryString
     let maybeParam = join $ lookup (convert $ symbol @queryName) query
     case join $ extract @arg <$> maybeParam of
-      Nothing -> tell NotFound
+      Nothing -> tell BadRequest
       Just a  -> route @next @h (handler a)
 
 -- | Pathをキャプチャしてhandlerに渡す
