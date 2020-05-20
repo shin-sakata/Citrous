@@ -42,7 +42,7 @@ data RoutingErr = BadRequest
     | NotAcceptable
     | UnsupportedMediaType
     | Unauthorized
-    | MethodMotAllowed (Set StdMethod)
+    | MethodNotAllowed (Set StdMethod)
     | NotFound
     deriving (Show, Eq, Ord)
 
@@ -51,11 +51,11 @@ toServerErr BadRequest           = err400
 toServerErr NotAcceptable        = err406
 toServerErr UnsupportedMediaType = err415
 toServerErr Unauthorized         = err401
-toServerErr (MethodMotAllowed _) = err405
+toServerErr (MethodNotAllowed _) = err405
 toServerErr NotFound             = err404
 
 responseRoutingErr :: RoutingErr -> Response
-responseRoutingErr routingErr@(MethodMotAllowed methods) =
+responseRoutingErr routingErr@(MethodNotAllowed methods) =
   responseServerError $ (toServerErr routingErr) {errHeaders = [renderAllowedMethods methods]}
 responseRoutingErr routingErr =
   responseServerError $ toServerErr routingErr
@@ -67,11 +67,11 @@ renderAllowedMethods methods = (hAllow, renderMethods methods)
     renderMethods methods = intercalate ", " (map renderStdMethod (toList methods))
 
 -- smart constructor
-badMethod :: StdMethod -> RoutingErr
-badMethod method = MethodMotAllowed $ singleton method
+methodNotAllowed :: StdMethod -> RoutingErr
+methodNotAllowed method = MethodNotAllowed $ singleton method
 
 instance Semigroup RoutingErr where
-  (MethodMotAllowed methodsL) <> (MethodMotAllowed methodsR) = MethodMotAllowed (methodsL <> methodsR)
+  (MethodNotAllowed methodsL) <> (MethodNotAllowed methodsR) = MethodNotAllowed (methodsL <> methodsR)
   l <> r = if l < r then l else r
 
 instance Monoid RoutingErr where

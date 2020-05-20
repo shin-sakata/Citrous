@@ -14,7 +14,8 @@ module Citrous.Integration.HasHandler where
 import           Citrous.Integration.Handler    (Handler, Handler', runHandler,
                                                  runHandler')
 import           Citrous.Integration.Router     (Router, RoutingErr (..),
-                                                 badMethod, earlyReturnRoute)
+                                                 earlyReturnRoute,
+                                                 methodNotAllowed)
 import           Citrous.Unit.Args
 import           Citrous.Unit.Capture           (Capture)
 import           Citrous.Unit.Extractor         (Extractor, extract)
@@ -125,7 +126,7 @@ instance
       else
         if requestMethod req == method
           then earlyReturnRoute $ responseLBS status [] <$> body
-          else tell $ badMethod $ methodStdVal @method
+          else tell $ methodNotAllowed $ methodStdVal @method
     where
       body = return $ mimeEncode @mediaType $ runHandler' handler
       status = toEnum $ nat @status
