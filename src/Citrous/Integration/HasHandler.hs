@@ -73,6 +73,7 @@ instance
           then earlyReturnRoute $ responseLBS status [] <$> body env
           else tell $ methodNotAllowed $ methodStdVal @method
       where
+        body :: env -> IO LazyByteString
         body env = mimeEncode @mediaType <$> runMonadHandler @h @env env handler
         status = toEnum $ nat @status
         method = methodVal @method

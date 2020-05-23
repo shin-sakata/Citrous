@@ -4,7 +4,6 @@
 
 module Citrous.Integration.Router where
 
-import           Citrous.Integration.Handler    (HandlerResult)
 import           Citrous.Unit.ServerErr         (ServerErr, err400, err401,
                                                  err404, err405, err406, err415,
                                                  errHeaders,
@@ -31,7 +30,7 @@ data RouterEnv a = RouterEnv
 type Router a = Eff '[ReaderDef (RouterEnv a), EitherDef (IO Response), WriterDef RoutingErr, "IO" >: IO] ()
 
 -- throwErrorを利用して最初にマッチしたRouteを返す。
-earlyReturnRoute :: HandlerResult Response -> Router a
+earlyReturnRoute :: IO Response -> Router a
 earlyReturnRoute = throwError
 
 runRouterWithState :: a -> Router a -> Application

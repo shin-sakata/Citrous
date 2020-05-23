@@ -18,14 +18,9 @@ import           Data.Functor.Identity      (Identity, runIdentity)
 import           GHC.Generics               (Generic)
 import           Network.Wai                (Response)
 
-
-type HandlerResult a = IO a
-
-type ReaderIO r a = (ReaderT r IO) a
-
 --------------------------
 class Monad m => MonadHandler m env where
-  runMonadHandler :: env -> m a -> HandlerResult a
+  runMonadHandler :: env -> m a -> IO a
 
 instance MonadHandler Identity r where
   runMonadHandler _ a = return $ runIdentity a
