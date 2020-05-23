@@ -4,6 +4,7 @@
 
 module Citrous.Integration.Router where
 
+import           Citrous.Integration.Handler    (HandlerResult)
 import           Citrous.Unit.ServerErr         (ServerErr, err400, err401,
                                                  err404, err405, err406, err415,
                                                  errHeaders,
@@ -22,18 +23,26 @@ import           Network.HTTP.Types.Method      (StdMethod (..),
 import           Network.Wai                    (Application, Response)
 import           Network.Wai.Internal           (Request)
 
-type Router = Eff '[ReaderDef Request, EitherDef (IO Response), WriterDef RoutingErr, "IO" >: IO] ()
+data RouterEnv a = RouterEnv
+    { request :: Request
+    , state   :: a
+    }
+
+type Router a = Eff '[ReaderDef (RouterEnv a), EitherDef (IO Response), WriterDef RoutingErr, "IO" >: IO] ()
 
 -- throwErrorを利用して最初にマッチしたRouteを返す。
-earlyReturnRoute :: IO Response -> Router
+earlyReturnRoute :: HandlerResult Response -> Router a
 earlyReturnRoute = throwError
 
-runRouter :: Router -> Application
-runRouter routes req send = send =<< do
-  result <- retractEff $ runWriterDef $ runEitherDef $ runReaderDef routes req
+runRouterWithState :: a -> Router a -> Application
+runRouterWithState a routes req send = send =<< do
+  result <- retractEff $ runWriterDef $ runEitherDef $ runReaderDef routes (RouterEnv req a)
   case result of
     (Left application, _) -> application
     (_, serverErr)        -> return $ responseRoutingErr serverErr
+
+runRouter :: Router () -> Application
+runRouter = runRouterWithState ()
 
 -- Ordを導出している
 -- 比較して小さい方がエラーの優先度が高い

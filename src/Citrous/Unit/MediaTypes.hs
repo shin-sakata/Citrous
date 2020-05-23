@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Citrous.Unit.MediaTypes where
 
@@ -34,6 +35,9 @@ class Accept ctype => MimeEncode ctype a where
 
 instance {-# OVERLAPPABLE #-} ToJSON a => MimeEncode JSON a where
   mimeEncode = encode
+
+instance {-# OVERLAPPABLE #-} Show s => MimeEncode TextPlain s where
+  mimeEncode = convert . show
 
 instance MimeEncode TextPlain LazyText where
   mimeEncode = convert

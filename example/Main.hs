@@ -7,14 +7,22 @@
 module Main where
 
 import           Citrous.API
+import           Control.Monad.Identity         (Identity)
+import           Control.Monad.IO.Class         (liftIO)
+import           Control.Monad.Reader           (ReaderT)
+import           Control.Monad.RWS.Class        (ask)
 import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Data.Convertible.Utf8.Internal
+import           Data.IORef                     (IORef, atomicModifyIORef',
+                                                 newIORef)
 import           Network.Wai.Handler.Warp       (run)
 
 main :: IO ()
-main = run 8080 $ runRouter router
+main = do
+  state <- newIORef 0
+  run 8080 $ runRouterWithState state router
 
-router :: Router
+router :: Router (IORef Int)
 router = do
   route @(Get '[TextPlain] String) rootHandler
   -- ^ curl localhost:8080
@@ -31,21 +39,27 @@ router = do
   route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
   -- ^ curl localhost:8080/24/orange
   -- >>> {"age":24,"name":"orange"}
+  route @("reader" :> Get '[TextPlain] Int) handler
 
-rootHandler :: Handler String
+rootHandler :: Identity String
 rootHandler = return "Hello Citrous!"
 
-helloHandler :: Handler String
+helloHandler :: Identity String
 helloHandler = return "Hello Handler!"
 
-queryHandler :: Int -> Handler String
+queryHandler :: Int -> Identity String
 queryHandler i = return $ show i
 
-userEchoHandler :: User -> Handler User
+userEchoHandler :: User -> Identity User
 userEchoHandler = return
 
-createUserHandler :: Int -> Text -> Handler User
+createUserHandler :: Int -> Text -> Identity User
 createUserHandler age name = return $ User { age = age, name = name }
+
+handler :: ReaderT (IORef Int) IO Int
+handler = do
+  state <- ask
+  liftIO $ atomicModifyIORef' state (\ s -> (s + 1, s))
 
 data User = User
     { age  :: Int
