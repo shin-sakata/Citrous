@@ -39,11 +39,12 @@ import           Data.Proxy                     (Proxy (..))
 import           Debug.Trace                    (trace)
 import           GHC.TypeLits                   (KnownNat, KnownSymbol, natVal,
                                                  symbolVal)
-import           Network.HTTP.Types.Status      (mkStatus)
+import           Network.HTTP.Types.Status      (mkStatus, Status)
 import           Network.Wai                    (Application, Request, Response,
                                                  getRequestBodyChunk, pathInfo,
                                                  queryString, requestMethod,
                                                  responseLBS)
+import Network.HTTP.Types.Header (ResponseHeaders)
 
 data (path :: k) :> (a :: *)
 
@@ -70,14 +71,17 @@ instance
       then tell NotFound
       else
         if requestMethod req == method
-          then earlyReturnRoute $ responseLBS status [] <$> body env
+          then earlyReturnRoute $ toResponse env
           else tell $ methodNotAllowed $ methodStdVal @method
       where
-        body :: env -> IO LazyByteString
-        body env = mimeEncode @mediaType <$> runMonadHandler @h @env env handler
         status = toEnum $ nat @status
         method = methodVal @method
-
+        handlerResult :: env -> Either ServerErr (IO a)
+        handlerResult env = runMonadHandler @h @env env handler
+        toResponse :: env -> IO Response
+        toResponse env = case handlerResult env of
+          Right val -> responseLBS status [] <$> mimeEncode @mediaType <$> val
+          Left err -> return $ responseServerError err
 
 
 -- | query paramをキャプチャ

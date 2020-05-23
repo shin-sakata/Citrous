@@ -7,6 +7,8 @@
 module Main where
 
 import           Citrous.API
+import           Control.Monad.Error.Class      (throwError)
+import           Control.Monad.Except           (Except)
 import           Control.Monad.Identity         (Identity)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Reader           (ReaderT)
@@ -39,7 +41,8 @@ router = do
   route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
   -- ^ curl localhost:8080/24/orange
   -- >>> {"age":24,"name":"orange"}
-  route @("reader" :> Get '[TextPlain] Int) handler
+  route @("reader" :> Get '[TextPlain] Int) globalStateHandler
+  route @("throwable" :> Capture "id" Int :> Get '[JSON] User) throwableHandler
 
 rootHandler :: Identity String
 rootHandler = return "Hello Citrous!"
@@ -56,10 +59,21 @@ userEchoHandler = return
 createUserHandler :: Int -> Text -> Identity User
 createUserHandler age name = return $ User { age = age, name = name }
 
-handler :: ReaderT (IORef Int) IO Int
-handler = do
+globalStateHandler :: ReaderT (IORef Int) IO Int
+globalStateHandler = do
   state <- ask
   liftIO $ atomicModifyIORef' state (\ s -> (s + 1, s))
+
+throwableHandler :: Int -> Except ServerErr User
+throwableHandler index =
+  if length userList <= index then
+    throwError err404
+  else
+    return $ userList !! index
+
+
+userList :: [User]
+userList = [ User 12 "Lemon", User 24 "Orange" ]
 
 data User = User
     { age  :: Int

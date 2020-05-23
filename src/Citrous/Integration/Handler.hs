@@ -18,21 +18,26 @@ import           Data.Functor.Identity      (Identity, runIdentity)
 import           GHC.Generics               (Generic)
 import           Network.Wai                (Response)
 
+toResponse :: Either ServerErr (IO Response) -> IO Response
+toResponse (Right res) = res
+toResponse (Left err)  = return $ responseServerError err
+
 --------------------------
 class Monad m => MonadHandler m env where
-  runMonadHandler :: env -> m a -> IO a
+  runMonadHandler :: env -> m a -> Either ServerErr (IO a)
 
 instance MonadHandler Identity r where
-  runMonadHandler _ a = return $ runIdentity a
+  runMonadHandler _ a = Right $ return $ runIdentity a
 
 instance MonadHandler (Reader r) r where
-  runMonadHandler r ma = return $ runReader ma r
+  runMonadHandler r ma = Right $ return $ runReader ma r
 
 instance MonadHandler IO r where
-  runMonadHandler _ = id
+  runMonadHandler _ = Right
 
 instance MonadHandler (ReaderT r IO) r where
-  runMonadHandler r ma = runReaderT ma r
+  runMonadHandler r ma = Right $ runReaderT ma r
 
---instance MonadHandler (Except ServerErr) r where
---  runMonadHandler _ ma = return <$> runExcept ma
+instance MonadHandler (Except ServerErr) r where
+  runMonadHandler _ ma = return <$> runExcept ma
+ 

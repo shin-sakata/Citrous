@@ -4,6 +4,7 @@
 
 module Citrous.Integration.Router where
 
+import           Citrous.Integration.Handler    (toResponse)
 import           Citrous.Unit.ServerErr         (ServerErr, err400, err401,
                                                  err404, err405, err406, err415,
                                                  errHeaders,
