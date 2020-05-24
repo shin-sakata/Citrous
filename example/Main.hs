@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE BlockArguments    #-}
 
 module Main where
 
@@ -32,15 +33,16 @@ router = do
   route @("hello" :> Get '[TextPlain] String) helloHandler
   -- ^ curl localhost:8080/hello
   -- >>> Hello Handler!
+  group "user" do
+    route @("echo" :> ReqBody '[JSON] User :> Post '[JSON] User) userEchoHandler
+    -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
+    -- >>> {"age":24,"name":"入田 関太郎"}
+    route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
+    -- ^ curl localhost:8080/user/24/orange
+    -- >>> {"age":24,"name":"orange"}
   route @("query" :> QueryParam "hogehoge" Int :> Get '[TextPlain] String) queryHandler
-  -- ^ curl localhost:8080/query
-  -- >>> Hello Handler!
-  route @("user" :> "echo" :> ReqBody '[JSON] User :> Post '[JSON] User) userEchoHandler
-  -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
-  -- >>> {"age":24,"name":"入田 関太郎"}
-  route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
-  -- ^ curl localhost:8080/24/orange
-  -- >>> {"age":24,"name":"orange"}
+  -- ^ curl localhost:8080/query?hogehoge=114514
+  -- >>> 114514
   route @("reader" :> Get '[TextPlain] Int) globalStateHandler
   route @("throwable" :> Capture "id" Int :> Get '[JSON] User) throwableHandler
 

@@ -55,6 +55,13 @@ class HasHandler layout h env where
   type HandlerT layout (h :: * -> *) env :: *
   route :: HandlerT layout h env -> Router env
 
+group :: Text -> Router env -> Router env
+group path router = do
+  reqPath <- asks (pathInfo . request)
+  if not (null reqPath) && (head reqPath == path)
+    then local tailPathInfoEnv router
+    else tell NotFound
+
 -- | Implはレスポンスの実装についての型であり、
 --   Handlerの戻り値と関連付けるためのinstance
 instance
