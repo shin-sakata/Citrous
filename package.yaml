@@ -34,7 +34,7 @@ dependencies:
   - membership
   - containers
   - bytestring
-
+  - http-api-data
 
 library:
   source-dirs: src

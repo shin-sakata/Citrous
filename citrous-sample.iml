@@ -105,5 +105,9 @@
     <orderEntry type="library" name="resourcet-1.2.4" level="project" />
     <orderEntry type="library" name="unliftio-core-0.1.2.0" level="project" />
     <orderEntry type="library" name="warp-3.3.11" level="project" />
+    <orderEntry type="library" name="http-api-data-0.4.1.1" level="project" />
+    <orderEntry type="library" name="attoparsec-iso8601-1.0.1.0" level="project" />
+    <orderEntry type="library" name="cookie-0.4.5" level="project" />
+    <orderEntry type="library" name="data-default-class-0.1.2.0" level="project" />
   </component>
 </module>

@@ -2,22 +2,24 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Citrous.Unit.MediaTypes where
 
+import           Control.Arrow                  (left)
 import           Data.Aeson                     (FromJSON, ToJSON,
                                                  eitherDecodeStrict, encode)
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (ByteString, LazyByteString,
                                                  LazyText, Text)
-import           Data.Proxy                     (Proxy (..))
 import           Network.HTTP.Media             (MediaType, (//), (/:))
 import           Prelude                        hiding (head)
+import           Web.FormUrlEncoded             (FromForm, ToForm,
+                                                 urlDecodeAsForm,
+                                                 urlEncodeAsForm)
 
 data JSON
-
 data TextPlain
+data FormUrlEncoded
 
 class Accept ctype where
   mediaType :: MediaType
@@ -30,6 +32,10 @@ instance Accept TextPlain where
   mediaType =
     "text" // "plain" /: ("charset", "UTF-8")
 
+-- | @application/x-www-form-urlencoded@
+instance Accept FormUrlEncoded where
+  mediaType = "application" // "x-www-form-urlencoded"
+
 class Accept ctype => MimeEncode ctype a where
   mimeEncode :: a -> LazyByteString
 
@@ -38,6 +44,9 @@ instance {-# OVERLAPPABLE #-} ToJSON a => MimeEncode JSON a where
 
 instance {-# OVERLAPPABLE #-} Show s => MimeEncode TextPlain s where
   mimeEncode = convert . show
+
+instance {-# OVERLAPPABLE #-} ToForm a => MimeEncode FormUrlEncoded a where
+  mimeEncode = urlEncodeAsForm
 
 instance MimeEncode TextPlain LazyText where
   mimeEncode = convert
@@ -53,6 +62,9 @@ class Accept ctype => MimeDecode ctype a where
 
 instance FromJSON a => MimeDecode JSON a where
   mimeDecode = eitherDecodeStrict
+
+instance FromForm a => MimeDecode FormUrlEncoded a where
+  mimeDecode = left convert . (urlDecodeAsForm . convert)
 
 instance MimeDecode TextPlain LazyText where
   mimeDecode = Right . convert
