@@ -22,8 +22,8 @@ import           Citrous.Unit.Capture           (Capture)
 import           Citrous.Unit.Extractor         (Extractor, extract)
 import           Citrous.Unit.Impl              (Impl, KnownMethod,
                                                  methodStdVal, methodVal)
-import           Citrous.Unit.MediaTypes        (MimeDecode, MimeEncode,
-                                                 mimeDecode, mimeEncode)
+import           Citrous.Unit.MediaTypes        (MimeEncode, MimesDecode,
+                                                 mimeEncode, mimesDecode)
 import           Citrous.Unit.QueryParam        (QueryParam)
 import           Citrous.Unit.RequestBody       (ReqBody)
 import           Citrous.Unit.ServerErr         (ServerErr, err405,
@@ -39,12 +39,12 @@ import           Data.Proxy                     (Proxy (..))
 import           Debug.Trace                    (trace)
 import           GHC.TypeLits                   (KnownNat, KnownSymbol, natVal,
                                                  symbolVal)
-import           Network.HTTP.Types.Status      (mkStatus, Status)
+import           Network.HTTP.Types.Header      (ResponseHeaders, hContentType)
+import           Network.HTTP.Types.Status      (Status, mkStatus)
 import           Network.Wai                    (Application, Request, Response,
                                                  getRequestBodyChunk, pathInfo,
                                                  queryString, requestMethod,
-                                                 responseLBS)
-import Network.HTTP.Types.Header (ResponseHeaders)
+                                                 responseLBS, requestHeaders)
 
 data (path :: k) :> (a :: *)
 
@@ -141,16 +141,18 @@ tailPathInfoEnv e = e { request = tailPathInfo $ request e }
 
 -- | ReqBodyをdecodeしてHandlerに渡す
 instance
-  (MimeDecode mediaType a, HasHandler next h env, MonadHandler h env) =>
-  HasHandler (ReqBody '[mediaType] a :> next) h env
+  (MimesDecode mediaTypes a, HasHandler next h env, MonadHandler h env) =>
+  HasHandler (ReqBody mediaTypes a :> next) h env
   where
-  type HandlerT (ReqBody '[mediaType] a :> next) h env = a -> HandlerT next h env
+  type HandlerT (ReqBody mediaTypes a :> next) h env = a -> HandlerT next h env
   route handler = do
     req <- asks request
     body <- liftIO $ getRequestBodyChunk req
-    case mimeDecode @mediaType @a body of
-      Right decodedBody -> route @next @h (handler decodedBody)
-      Left err          -> tell BadRequest
+    let contentType = lookup hContentType (requestHeaders req)
+    case mimesDecode @mediaTypes @a body =<< contentType of
+      Nothing         -> tell NotAcceptable
+      Just (Right a)  -> route @next @h $ handler a
+      Just (Left err) -> tell BadRequest
 
 nat :: forall k. KnownNat k => Int
 nat = fromInteger $ natVal (Proxy :: Proxy k)

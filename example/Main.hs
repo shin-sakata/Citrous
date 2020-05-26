@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeOperators     #-}
 {-# LANGUAGE BlockArguments    #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
@@ -14,11 +15,13 @@ import           Control.Monad.Identity         (Identity)
 import           Control.Monad.IO.Class         (liftIO)
 import           Control.Monad.Reader           (ReaderT)
 import           Control.Monad.RWS.Class        (ask)
-import           Data.Aeson.TH                  (defaultOptions, deriveJSON)
 import           Data.Convertible.Utf8.Internal
 import           Data.IORef                     (IORef, atomicModifyIORef',
                                                  newIORef)
 import           Network.Wai.Handler.Warp       (run)
+import           GHC.Generics (Generic)
+import Data.Aeson (ToJSON, FromJSON)
+import Web.FormUrlEncoded (FromForm, ToForm)
 
 main :: IO ()
 main = do
@@ -40,8 +43,8 @@ router = do
   route @("throwable" :> Capture "id" Int :> Get '[JSON] User) throwableHandler
 
   group "user" do
-    route @("echo" :> ReqBody '[JSON] User :> Post '[JSON] User) userEchoHandler
-    -- ^ curl localhost:8080/user/echo -d '{ "age": 24, "name": "入田 関太郎" }'
+    route @("echo" :> ReqBody '[JSON, FormUrlEncoded] User :> Post '[JSON] User) userEchoHandler
+    -- ^ curl localhost:8080/user/echo -H 'Content-Type:application/json' -d '{ "age": 24, "name": "入田 関太郎" }'
     -- >>> {"age":24,"name":"入田 関太郎"}
     route @(Capture "age" Int :> Capture "name" Text :> Get '[JSON] User) createUserHandler
     -- ^ curl localhost:8080/user/24/orange
@@ -82,4 +85,9 @@ data User = User
     { age  :: Int
     , name :: Text
     }
-$(deriveJSON defaultOptions 'User)
+  deriving (Generic)
+
+instance ToJSON User
+instance FromJSON User
+instance FromForm User
+instance ToForm User

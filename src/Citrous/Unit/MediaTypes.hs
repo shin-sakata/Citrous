@@ -1,7 +1,12 @@
 {-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE PolyKinds             #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeOperators         #-}
 
 module Citrous.Unit.MediaTypes where
 
@@ -11,8 +16,8 @@ import           Data.Aeson                     (FromJSON, ToJSON,
 import           Data.Convertible.Utf8          (convert)
 import           Data.Convertible.Utf8.Internal (ByteString, LazyByteString,
                                                  LazyText, Text)
-import           Network.HTTP.Media             (MediaType, (//), (/:))
-import           Prelude                        hiding (head)
+import           Network.HTTP.Media             (MediaType, matchAccept, (//),
+                                                 (/:))
 import           Web.FormUrlEncoded             (FromForm, ToForm,
                                                  urlDecodeAsForm,
                                                  urlEncodeAsForm)
@@ -20,6 +25,39 @@ import           Web.FormUrlEncoded             (FromForm, ToForm,
 data JSON
 data TextPlain
 data FormUrlEncoded
+
+type HeaderValue = ByteString
+
+type Body = ByteString
+
+isAccept :: forall ctype. Accept ctype => HeaderValue -> Bool
+isAccept header = case matchAccept [mediaType @ctype] header of
+  Just _  -> True
+  Nothing -> False
+
+class Accepts ctypes where
+  mediaTypes :: [MediaType]
+
+instance Accepts '[] where
+  mediaTypes = []
+
+instance (Accept ctype, Accepts ctypes) => Accepts (ctype : ctypes) where
+  mediaTypes = mediaType @ctype : mediaTypes @ctypes
+
+-- NothingだったらNotAcceptable
+-- Just (Left x)だったらデコードエラー
+-- Just (Right x)だと成功
+class Accepts ctypes => MimesDecode ctypes a where
+  mimesDecode :: Body -> HeaderValue -> Maybe (Either String a)
+
+instance MimesDecode '[] a where
+  mimesDecode _ _ = Nothing
+
+instance (MimeDecode ctype a, MimesDecode rest a) => MimesDecode (ctype : rest) a where
+  mimesDecode body headerValue =
+    if isAccept @ctype headerValue
+      then Just $ mimeDecode @ctype body
+      else mimesDecode @rest body headerValue
 
 class Accept ctype where
   mediaType :: MediaType
