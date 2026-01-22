@@ -32,8 +32,8 @@ type instance (x ': xs) ++ ys = x ': (xs ++ ys)
 
 -- | Append HList
 hAppend :: HList xs -> HList ys -> HList (xs ++ ys)
-hAppend HNil ys          = ys
-hAppend (x1 ::: HNil) ys = x1 ::: ys
+hAppend HNil ys      = ys
+hAppend (x ::: xs) ys = x ::: hAppend xs ys
 
 -- | Apply HList to function
 apply :: Fn xs r -> HList xs -> r

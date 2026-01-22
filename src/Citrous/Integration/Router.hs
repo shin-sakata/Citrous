@@ -4,17 +4,15 @@
 
 module Citrous.Integration.Router where
 
-import           Citrous.Integration.Handler    (toResponse)
 import           Citrous.Unit.ServerErr         (ServerErr, err400, err401,
                                                  err404, err405, err406, err415,
                                                  errHeaders,
                                                  responseServerError)
 import           Control.Monad.Error.Class      (throwError)
-import           Control.Monad.Writer           (tell)
 import           Data.ByteString.Char8          (intercalate)
 import           Data.Convertible.Utf8.Internal (ByteString)
 import           Data.Extensible.Class          (type (>:))
-import           Data.Extensible.Effect         (Eff, liftEff, retractEff)
+import           Data.Extensible.Effect         (Eff, retractEff)
 import           Data.Extensible.Effect.Default
 import           Data.Set                       (Set, singleton, toList)
 import           Network.HTTP.Types.Header      (Header, hAllow)
@@ -70,10 +68,7 @@ responseRoutingErr routingErr =
   responseServerError $ toServerErr routingErr
 
 renderAllowedMethods :: Set StdMethod -> Header
-renderAllowedMethods methods = (hAllow, renderMethods methods)
-  where
-    renderMethods :: Set StdMethod -> ByteString
-    renderMethods methods = intercalate ", " (map renderStdMethod (toList methods))
+renderAllowedMethods methods = (hAllow, intercalate ", " (map renderStdMethod (toList methods)))
 
 -- smart constructor
 methodNotAllowed :: StdMethod -> RoutingErr

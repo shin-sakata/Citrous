@@ -1,22 +1,13 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE TypeOperators              #-}
-{-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Citrous.Integration.Handler where
 
-import           Citrous.Unit.ServerErr     (ServerErr, responseServerError)
+import           Citrous.Unit.ServerErr (ServerErr, responseServerError)
 import           Control.Monad.Except
-import           Control.Monad.Reader       (Reader, ReaderT, runReader,
-                                             runReaderT)
-import           Control.Monad.Reader.Class (MonadReader)
-import           Data.Functor.Identity      (Identity, runIdentity)
-import           GHC.Generics               (Generic)
-import           Network.Wai                (Response)
+import           Control.Monad.Reader   (Reader, ReaderT, runReader, runReaderT)
+import           Data.Functor.Identity  (Identity, runIdentity)
+import           Network.Wai            (Response)
 
 toResponse :: Either ServerErr (IO Response) -> IO Response
 toResponse (Right res) = res

@@ -22,29 +22,29 @@ import           Citrous.Unit.Capture           (Capture)
 import           Citrous.Unit.Extractor         (Extractor, extract)
 import           Citrous.Unit.Impl              (Impl, KnownMethod,
                                                  methodStdVal, methodVal)
-import           Citrous.Unit.MediaTypes        (MimeEncode, MimesDecode,
-                                                 mimeEncode, mimesDecode)
+import           Citrous.Unit.MediaTypes        (Accept, MimeEncode, MimesDecode,
+                                                 mediaType, mimeEncode,
+                                                 mimesDecode)
 import           Citrous.Unit.QueryParam        (QueryParam)
 import           Citrous.Unit.RequestBody       (ReqBody)
-import           Citrous.Unit.ServerErr         (ServerErr, err405,
-                                                 responseServerError)
+import           Citrous.Unit.ServerErr         (ServerErr, responseServerError)
 import           Control.Monad                  (join)
-import           Control.Monad.Error.Class      (throwError)
 import           Control.Monad.IO.Class         (liftIO)
-import           Control.Monad.Reader           (ask, asks, local)
+import           Control.Monad.Reader           (asks, local)
 import           Control.Monad.Writer           (tell)
+import           Data.ByteString                (ByteString)
+import qualified Data.ByteString                as BS
 import           Data.Convertible.Utf8          (convert)
-import           Data.Convertible.Utf8.Internal (LazyByteString, Text)
+import           Data.Convertible.Utf8.Internal (Text)
 import           Data.Proxy                     (Proxy (..))
-import           Debug.Trace                    (trace)
 import           GHC.TypeLits                   (KnownNat, KnownSymbol, natVal,
                                                  symbolVal)
-import           Network.HTTP.Types.Header      (ResponseHeaders, hContentType)
-import           Network.HTTP.Types.Status      (Status, mkStatus)
-import           Network.Wai                    (Application, Request, Response,
+import           Network.HTTP.Media             (renderHeader)
+import           Network.HTTP.Types.Header      (hContentType)
+import           Network.Wai                    (Request, Response,
                                                  getRequestBodyChunk, pathInfo,
-                                                 queryString, requestMethod,
-                                                 responseLBS, requestHeaders)
+                                                 queryString, requestHeaders,
+                                                 requestMethod, responseLBS)
 
 data (path :: k) :> (a :: *)
 
@@ -66,7 +66,7 @@ group path router = do
 --   Handlerの戻り値と関連付けるためのinstance
 instance
   {-# OVERLAPPABLE #-}
-  (MimeEncode mediaType a, KnownMethod method, KnownNat status, MonadHandler h env) =>
+  (MimeEncode mediaType a, Accept mediaType, KnownMethod method, KnownNat status, MonadHandler h env) =>
   HasHandler (Impl method status '[mediaType] a) h env
   where
   type HandlerT (Impl method status '[mediaType] a) h env = h a
@@ -83,11 +83,12 @@ instance
       where
         status = toEnum $ nat @status
         method = methodVal @method
+        contentTypeHeader = (hContentType, renderHeader $ mediaType @mediaType)
         handlerResult :: env -> Either ServerErr (IO a)
         handlerResult env = runMonadHandler @h @env env handler
         toResponse :: env -> IO Response
         toResponse env = case handlerResult env of
-          Right val -> responseLBS status [] <$> mimeEncode @mediaType <$> val
+          Right val -> responseLBS status [contentTypeHeader] <$> mimeEncode @mediaType <$> val
           Left err -> return $ responseServerError err
 
 
@@ -139,6 +140,16 @@ tailPathInfo req = req {pathInfo = tail $ pathInfo req}
 tailPathInfoEnv :: RouterEnv a -> RouterEnv a
 tailPathInfoEnv e = e { request = tailPathInfo $ request e }
 
+-- | リクエストボディを全て読み取る
+getRequestBody :: Request -> IO ByteString
+getRequestBody req = go BS.empty
+  where
+    go acc = do
+      chunk <- getRequestBodyChunk req
+      if BS.null chunk
+        then return acc
+        else go (acc <> chunk)
+
 -- | ReqBodyをdecodeしてHandlerに渡す
 instance
   (MimesDecode mediaTypes a, HasHandler next h env, MonadHandler h env) =>
@@ -147,12 +158,12 @@ instance
   type HandlerT (ReqBody mediaTypes a :> next) h env = a -> HandlerT next h env
   route handler = do
     req <- asks request
-    body <- liftIO $ getRequestBodyChunk req
+    body <- liftIO $ getRequestBody req
     let contentType = lookup hContentType (requestHeaders req)
     case mimesDecode @mediaTypes @a body =<< contentType of
-      Nothing         -> tell NotAcceptable
+      Nothing         -> tell UnsupportedMediaType
       Just (Right a)  -> route @next @h $ handler a
-      Just (Left err) -> tell BadRequest
+      Just (Left _)   -> tell BadRequest
 
 nat :: forall k. KnownNat k => Int
 nat = fromInteger $ natVal (Proxy :: Proxy k)
